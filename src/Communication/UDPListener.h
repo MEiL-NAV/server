@@ -2,7 +2,7 @@
 
 #include <thread>
 #include <functional>
-#include "Protocol/Message.h"
+#include "../Protocol/Message.h"
 
 class UDPListener {
 public:
