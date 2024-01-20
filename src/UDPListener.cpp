@@ -33,6 +33,12 @@ void UDPListener::initialize_socket() {
         return;
     }
 
+    // Set timeout on socket
+    struct timeval tv{0, 100000};
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO,&tv,sizeof(tv)) < 0) {
+        perror("Timeout set rrror");
+    }
+
     // Set up server address
     struct sockaddr_in serverAddress;
     memset(&serverAddress, 0, sizeof(serverAddress));
@@ -72,7 +78,7 @@ void UDPListener::receive() {
 
     ssize_t bytesRead = recvfrom(sockfd, buffer, sizeof(buffer), 0, NULL, NULL);
 
-    if (bytesRead == 0)
+    if (bytesRead <= 0)
     {
         return;
     }
