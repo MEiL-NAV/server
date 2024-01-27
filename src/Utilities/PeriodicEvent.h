@@ -7,11 +7,12 @@
 
 class PeriodicEvent {
 public:
-    PeriodicEvent(uint32_t period_millis);
+    PeriodicEvent(uint32_t period_millis, bool self_start = true);
     virtual ~PeriodicEvent();
 
 protected:
-    virtual void periodic_event() = 0;
+    void start_periodic_task();
+    virtual void periodic_event() {};
 
 private:
     std::thread sender_thread;

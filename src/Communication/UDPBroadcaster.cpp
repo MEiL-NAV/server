@@ -49,12 +49,6 @@ void UDPBroadcaster::send(std::vector<uint8_t> bytes) {
     send(bytes.data(), bytes.size());
 }
 
-template <size_t T>
-void UDPBroadcaster::send(std::array<uint8_t, T> bytes) {
-    send(bytes.data(), bytes.size());
-}
-
 void UDPBroadcaster::send(const uint8_t* data, size_t size) {
-    std::cout << broadcast_address.sin_port << std::endl;
     sendto(socket_fd, data, size, 0, reinterpret_cast<const sockaddr*>(&broadcast_address), sizeof(broadcast_address));
 }

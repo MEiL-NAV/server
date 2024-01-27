@@ -83,10 +83,10 @@ void UDPListener::receive() {
         return;
     }
     
-    for (ssize_t i = 0; i < bytesRead; ++i) {
-        printf("%02X ", buffer[i]);
-    }
-    std::cout << std::endl;
+    // for (ssize_t i = 0; i < bytesRead; ++i) {
+    //     printf("%02X ", buffer[i]);
+    // }
+    // std::cout << std::endl;
 
     auto message = decoder.decode(buffer,bytesRead);
 

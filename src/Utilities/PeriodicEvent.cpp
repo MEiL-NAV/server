@@ -1,9 +1,13 @@
 #include "PeriodicEvent.h"
+#include <iostream>
 
-PeriodicEvent::PeriodicEvent(uint32_t period_millis)
+PeriodicEvent::PeriodicEvent(uint32_t period_millis, bool self_start)
     : should_exit(false), period_millis(period_millis) 
 {
-    sender_thread = std::thread(&PeriodicEvent::event, this);
+    if (self_start)
+    {
+       start_periodic_task();
+    }
 }
 
 PeriodicEvent::~PeriodicEvent() 
@@ -12,6 +16,14 @@ PeriodicEvent::~PeriodicEvent()
     cv.notify_all();
     if (sender_thread.joinable()) {
         sender_thread.join();
+    }
+}
+
+void PeriodicEvent::start_periodic_task() 
+{
+    if(!sender_thread.joinable())
+    {
+        sender_thread = std::thread(&PeriodicEvent::event, this);
     }
 }
 

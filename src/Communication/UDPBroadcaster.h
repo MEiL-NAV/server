@@ -25,3 +25,8 @@ private:
     void initializeSocket();
     void send(const uint8_t* data, size_t size);
 };
+
+template <size_t T>
+void UDPBroadcaster::send(std::array<uint8_t, T> bytes) {
+    send(bytes.data(), bytes.size());
+}

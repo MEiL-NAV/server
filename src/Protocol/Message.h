@@ -13,7 +13,7 @@ enum Command : uint8_t
     GYROSCOPE_READING       = 4
 };
 
-typedef std::variant<TimeSyncPacket,DummySensorPacket> Payload;
+typedef std::variant<TimeSyncPacket,DummySensorPacket, VectorPacket> Payload;
 
 struct Message
 {
