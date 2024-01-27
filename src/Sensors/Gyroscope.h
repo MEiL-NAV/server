@@ -23,4 +23,5 @@ private:
     void calibrate(Eigen::Vector3f sample);
 
     static constexpr float LPF = 0.3f;
+    static constexpr float sd_limit = 300.0f;
 };

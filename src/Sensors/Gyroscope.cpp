@@ -1,5 +1,6 @@
 #include "Gyroscope.h"
 #include <iostream>
+#include "../Utilities/Statistics.h"
 
 Gyroscope::Gyroscope(TimeSynchronizer &time_synchronizer)
     :   Sensor(time_synchronizer),
@@ -29,14 +30,20 @@ void Gyroscope::consumeMessage(const Message &msg)
 
 void Gyroscope::calibrate(Eigen::Vector3f sample) 
 {
-    static int counter = 0;
-    static Eigen::Vector3f sum = Eigen::Vector3f::Zero();
+    static Statistics<Eigen::Vector3f> statistic(1000);
 
-    sum += sample;
-    counter++;
-    if(counter == 1000)
+    if(statistic.push_sample(sample))
     {
-        bias = sum / counter;
+        auto sd = statistic.sd();
+        if(sd.maxCoeff() > sd_limit)
+        {
+            std::cout << "Gyroscope calibration failed! sd: " << sd.maxCoeff() << " > " << sd_limit << std::endl;
+            statistic.reset();
+            return;
+        }
+
+        bias = statistic.mean();
         initialized = true;
+        std::cout << "Gyroscope calibrated! Bias: " << bias.transpose() << ", sd: " << sd.transpose() << std::endl;
     }
 }
