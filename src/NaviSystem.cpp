@@ -56,8 +56,7 @@ void NaviSystem::send_status()
 
     if(accelerometer.healthy())
     {
-
-        auto reading = accelerometer.get_raw_value();
+        auto reading = accelerometer.get_value();
         ss << "a:"  << reading.first << "," << reading.second.format(commaFormat);
         s = ss.str();
         //std::cout << s << std::endl;
@@ -68,7 +67,7 @@ void NaviSystem::send_status()
 
     if(gyroscope.healthy())
     {
-        auto reading = gyroscope.get_raw_value();
+        auto reading = gyroscope.get_value();
         ss << "g:"  << reading.first << "," << reading.second.format(commaFormat);
         s = ss.str();
         //std::cout << s << std::endl;
