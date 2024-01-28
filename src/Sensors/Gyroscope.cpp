@@ -1,6 +1,7 @@
 #include "Gyroscope.h"
 #include <iostream>
 #include "../Utilities/Statistics.h"
+#include "../Utilities/Logger.h"
 #include "../Utilities/Filters/LPF.h"
 
 Gyroscope::Gyroscope(TimeSynchronizer &time_synchronizer, bool skip_calibration)
@@ -8,7 +9,6 @@ Gyroscope::Gyroscope(TimeSynchronizer &time_synchronizer, bool skip_calibration)
         initialized{skip_calibration},
         bias{Eigen::Vector3f::Zero()}
 {
-    last_update = 0U;
     filter = std::make_unique<LPF<Eigen::Vector3f>>(LPF_cufoff_freq);
 }
 
@@ -35,19 +35,20 @@ void Gyroscope::consumeMessage(const Message &msg)
 void Gyroscope::calibrate(Eigen::Vector3f sample) 
 {
     static Statistics<Eigen::Vector3f> statistic(1000);
+    static Logger logger(LogType::CALIBRATION);
 
     if(statistic.push_sample(sample))
     {
         auto sd = statistic.sd();
         if(sd.maxCoeff() > sd_limit)
         {
-            std::cout << "Gyroscope calibration failed! sd: " << sd.maxCoeff() << " > " << sd_limit << std::endl;
+            logger << "Gyroscope calibration failed! sd: " << sd.maxCoeff() << " > " << sd_limit << "\n";
             statistic.reset();
             return;
         }
 
         bias = statistic.mean();
         initialized = true;
-        std::cout << "Gyroscope calibrated! Bias: " << bias.transpose() << ", sd: " << sd.transpose() << std::endl;
+        logger << "Gyroscope calibrated! Bias: " << bias.transpose() << ", sd: " << sd.transpose() << "\n";
     }
 }

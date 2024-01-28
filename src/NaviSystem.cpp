@@ -59,7 +59,6 @@ void NaviSystem::send_status()
         auto reading = accelerometer.get_value();
         ss << "a:"  << reading.first << "," << reading.second.format(commaFormat);
         s = ss.str();
-        //std::cout << s << std::endl;
         message.rebuild(s.data(), s.size());
         ss.str("");
         status_sock.send(message,zmq::send_flags::none);
@@ -70,7 +69,6 @@ void NaviSystem::send_status()
         auto reading = gyroscope.get_value();
         ss << "g:"  << reading.first << "," << reading.second.format(commaFormat);
         s = ss.str();
-        //std::cout << s << std::endl;
         message.rebuild(s.data(), s.size());
         ss.str("");
         status_sock.send(message,zmq::send_flags::none);

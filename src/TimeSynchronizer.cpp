@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cassert>
 #include "Utilities/Millis.h"
+#include "Utilities/Logger.h"
 
 TimeSynchronizer::TimeSynchronizer(uint32_t period_millis,
                                  uint16_t broadcast_port) 
@@ -20,24 +21,27 @@ std::optional<int32_t> TimeSynchronizer::get_offset(uint8_t node_id)
   return std::nullopt;
 }
 
-void TimeSynchronizer::consumeMessage(const Message &msg) {
-  assert(msg.command == Command::TIMESYNC);
-  auto millis = Millis::get();
-  uint32_t ping;
-  auto payload = std::get<TimeSyncPacket>(msg.payload);
-  {
-    std::lock_guard<std::mutex> lck(mtx);
-    if (payload.sync_id != std::get<0>(last_sync_time)) {
-      return;
-    }
-    ping = millis - std::get<1>(last_sync_time);
-    offset_table[msg.node_id] =
+void TimeSynchronizer::consumeMessage(const Message &msg) 
+{
+	static Logger logger(LogType::SYNC);
+
+    assert(msg.command == Command::TIMESYNC);
+    auto millis = Millis::get();
+    uint32_t ping;
+    auto payload = std::get<TimeSyncPacket>(msg.payload);
+    {
+        std::lock_guard<std::mutex> lck(mtx);
+        if (payload.sync_id != std::get<0>(last_sync_time)) 
+        {
+            return;
+        }
+        ping = millis - std::get<1>(last_sync_time);
+        offset_table[msg.node_id] =
         static_cast<int32_t>((millis + std::get<1>(last_sync_time)) / 2U) -
         static_cast<int32_t>(payload.time);
-  }
-  std::cout << "Node " << +msg.node_id << " offset set to "
-            << offset_table[msg.node_id] << " ms. Ping: " << ping << "ms"
-            << std::endl;
+    }
+    logger << "Node " << +msg.node_id << " offset set to "
+      	<< offset_table[msg.node_id] << " ms. Ping: " << ping << "ms\n";
 }
 
 void TimeSynchronizer::periodic_event() 

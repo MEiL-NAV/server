@@ -3,6 +3,7 @@
 #include <semaphore>
 #include "NaviSystem.hpp"
 #include "Utilities/Millis.h"
+#include "Utilities/Logger.h"
 
 namespace
 {
@@ -11,6 +12,8 @@ namespace
 
 int main()
 {
+    Logger::set_mask(LogType::CALIBRATION | LogType::INFO);
+
     Millis::start();
     std::signal(SIGINT, 
         [](int sig) {
@@ -22,6 +25,6 @@ int main()
     );
     NaviSystem navi_sys;
     shutting_down.acquire();
-    std::cout << "Bye!" << std::endl;
+    Logger(LogType::INFO) << "Bye!\n";
     return 0;
 }

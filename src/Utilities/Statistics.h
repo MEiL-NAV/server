@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory>
 #include <eigen3/Eigen/Dense>
 
@@ -107,15 +109,13 @@ private:
 };
 
 template <>
-Eigen::Vector3f Statistics<Eigen::Vector3f>::sq(Eigen::Vector3f val)
+inline Eigen::Vector3f Statistics<Eigen::Vector3f>::sq(Eigen::Vector3f val)
 {
     return val.cwisePow(2.0f);
 }
 
 template <>
-Eigen::Vector3f Statistics<Eigen::Vector3f>::sqrt(Eigen::Vector3f val)
+inline Eigen::Vector3f Statistics<Eigen::Vector3f>::sqrt(Eigen::Vector3f val)
 {
     return val.cwiseSqrt();
 }
-
-
