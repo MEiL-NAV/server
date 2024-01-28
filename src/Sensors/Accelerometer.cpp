@@ -82,15 +82,15 @@ uint8_t AccelerometerCalibration::calc_sign(Eigen::Vector3f mean)
     for (size_t i = 0; i < 3; i++)
     {
         int sign_val = INVALID_SIGN;
-        if (mean[i] > 0.85f*G)
+        if (mean[i] > 0.8f*G)
         {
             sign_val = PLUS;
         }
-        else if (mean[i] < -0.85f*G)
+        else if (mean[i] < -0.8f*G)
         {
             sign_val = MINUS;
         }
-        else if (std::abs(mean[i]) < 0.05f*G )
+        else if (std::abs(mean[i]) < 0.1f*G )
         {
             sign_val = ZERO;
         }
