@@ -5,6 +5,7 @@
 #include "Sensors/Gyroscope.h"
 #include "Utilities/PeriodicEvent.h"
 #include <zmq.hpp>
+#include "EKF/EKF_IMU.h"
 
 class NaviSystem : public PeriodicEvent
 {
@@ -18,6 +19,7 @@ protected:
 private:
     UDPListener udp_listener;
     TimeSynchronizer time_synchronizer;
+    EKF_IMU ekf;
 
     // Sensors
     Accelerometer accelerometer;
