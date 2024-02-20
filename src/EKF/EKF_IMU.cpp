@@ -55,11 +55,26 @@ Eigen::Matrix<float, 13, 13> EKF_IMU::state_function_derivative(Eigen::Vector<fl
     return A;
 }
 
+Eigen::Vector<float, 3> EKF_IMU::measurement_function(Eigen::Vector<float, 13> &state)
+{
+    Eigen::Vector3f h;
+
+    float& q0 = state(6);
+    float& qx = state(7);
+    float& qy = state(8);
+    float& qz = state(9);
+
+    h(0) = 2 * q0 * qy + 2 * qx * qz;
+    h(1) = 2 * qy * qz - 2 * q0 * qx;
+    h(2) = q0 * q0 - qx * qx - qy * qy + qz * qz;
+    return g.z() * h;
+}
+
 Eigen::Matrix<float, 3, 13> EKF_IMU::measurement_function_derivative(Eigen::Vector<float, 13> &state)
 {
     Eigen::Matrix<float, 3, 13> H = Eigen::Matrix<float, 3, 13>::Zero();
     Eigen::Vector<float, 4> quaterion = state.segment<4>(6);
-    H.block<3, 4>(0, 6) = Ca(quaterion);
+    H.block<3, 4>(0, 6) = g.z() * Ca(quaterion);
     return H;
 }
 

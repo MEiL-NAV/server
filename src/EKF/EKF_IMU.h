@@ -11,6 +11,7 @@ public:
 
     void update(uint32_t reading_time, Eigen::Vector3f gyro_reading, Eigen::Vector3f acc_reading);
 
+    Eigen::Vector<float, 13> get_state() { return EKF::get_state(); }
     Eigen::Vector3f get_position() { return state.head<3>(); }
     Eigen::Vector3f get_velocity() { return state.segment<3>(3); }
     Eigen::Vector4f get_quaterion() { return state.segment<4>(6); }
