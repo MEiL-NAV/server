@@ -1,10 +1,14 @@
+#pragma once
 #include <eigen3/Eigen/Dense>
 
 template<int state_size, int input_size, int measurement_size>
 class EKF
 {
 public:
-    EKF();
+    EKF(
+        Eigen::Matrix<float,state_size,state_size> process_noise_covariance,
+        Eigen::Matrix<float,measurement_size,measurement_size> measurement_noise_covariance
+    );
     virtual ~EKF() {}
 
     virtual void predict(Eigen::Vector<float, input_size> input);
@@ -38,12 +42,14 @@ protected:
 };
 
 template <int state_size, int input_size, int measurement_size>
-inline EKF<state_size, input_size, measurement_size>::EKF()
+inline EKF<state_size, input_size, measurement_size>::EKF(
+    Eigen::Matrix<float,state_size,state_size> process_noise_covariance,
+    Eigen::Matrix<float,measurement_size,measurement_size> measurement_noise_covariance)
+    : process_noise_covariance{process_noise_covariance},
+      measurement_noise_covariance{measurement_noise_covariance}
 {
     state.setZero();
     covariance.setIdentity();
-    process_noise_covariance.setZero();
-    measurement_noise_covariance.setZero();
 }
 
 template <int state_size, int input_size, int measurement_size>
