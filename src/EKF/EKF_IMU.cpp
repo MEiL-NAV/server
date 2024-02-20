@@ -3,8 +3,8 @@
 
 
 EKF_IMU::EKF_IMU()
-    :   EKFConstraints(Eigen::Matrix<float, 13, 13>::Zero(),
-                       Eigen::Matrix<float, 3, 3>::Zero()),
+    :   EKFConstraints(Eigen::Matrix<float, 13, 13>::Identity(),
+                       Eigen::Matrix<float, 3, 3>::Identity()),
         last_update{0},
         delta_time{0.0f},
         g{0.0f,0.0f,9.805f}
@@ -47,6 +47,10 @@ Eigen::Matrix<float, 13, 13> EKF_IMU::state_function_derivative(Eigen::Vector<fl
     Eigen::Matrix<float, 13, 13> A = Eigen::Matrix<float, 13, 13>::Identity();
     A.block<3, 3>(0, 3) = Eigen::Matrix<float, 3, 3>::Identity() * delta_time;
     Eigen::Vector<float, 4> quaterion = state.segment<4>(6);
+    Eigen::Vector<float, 3> acc_val = input.tail<3>();
+    Eigen::Matrix<float,3,4> D_val = D(quaterion, acc_val);
+    A.block<3, 4>(0,6) = delta_time * delta_time / 2.0f * D_val;
+    A.block<3, 4>(3,6) = delta_time * D_val;
     A.block<4, 3>(6,10) = - delta_time / 2.0f * S(quaterion);
     return A;
 }
