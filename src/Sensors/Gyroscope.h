@@ -8,6 +8,7 @@ class Gyroscope : public Sensor<Eigen::Vector3f>
 {
 public:
     Gyroscope(TimeSynchronizer& time_synchronizer, bool skip_calibration = false);
+    virtual ~Gyroscope() {}
 
     void consumeMessage(const Message& msg) override;
 

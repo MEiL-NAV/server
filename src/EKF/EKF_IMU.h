@@ -1,5 +1,6 @@
 #pragma once
 #include "EKFConstraints.h"
+#include "ConstraintsLoader.h"
 
 
 //State: x, y, z, vx, vy, vz, q0, qx, qy, qz, gyro_bias_x, gyro_bias_y, gyro_bias_z 
@@ -19,6 +20,7 @@ public:
 protected:
     uint32_t last_update;
     float delta_time;
+    ConstraintsLoader constraints_loader;
 
     Eigen::Vector<float, 13>
     state_function(Eigen::Vector<float, 13> &state,

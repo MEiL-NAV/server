@@ -14,7 +14,7 @@ file(GLOB_RECURSE SOURCES ${SOURCE_DIR}/*.cpp)
 
 include_directories(${INCLUDE_DIR})
 link_directories(${LIB_DIR})
-link_directories(${CMAKE_SOURCE_DIR}/lib/UAV_common)
+# link_directories(${CMAKE_SOURCE_DIR}/lib/UAV_common)
 
 link_directories("/usr/lib/x86_64-linux-gnu")
 link_directories("/usr/local/lib")
@@ -30,3 +30,8 @@ find_package(cxxopts)
 target_link_libraries(server cxxopts::cxxopts)
 find_package(cppzmq)
 target_link_libraries(server cppzmq)
+
+add_custom_command(TARGET server POST_BUILD 
+               COMMAND ${CMAKE_COMMAND} -E copy_if_different
+               "${CMAKE_SOURCE_DIR}/lib/libconstraints.so"              
+                $<TARGET_FILE_DIR:server>)

@@ -36,3 +36,4 @@ docs/
 *.exe
 *.out
 *.app
+!lib/libconstraints.so

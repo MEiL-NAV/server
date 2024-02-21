@@ -1,5 +1,6 @@
 #include "EKF_IMU.h"
 #include "Math.h"
+#include <iostream>
 
 
 EKF_IMU::EKF_IMU()
@@ -12,6 +13,8 @@ EKF_IMU::EKF_IMU()
     state(3+3) = 1.0f; // init quaterion as 1,0,0,0
     // TODO: calibrate
     constraint_correction_scaler = 0.0f;
+
+    std::cout << constraints_loader.constraints_derivative(state) << std::endl;
 }
 
 void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
