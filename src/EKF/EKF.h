@@ -49,7 +49,7 @@ inline EKF<state_size, input_size, measurement_size>::EKF(
       measurement_noise_covariance{measurement_noise_covariance}
 {
     state.setZero();
-    covariance.setIdentity();
+    covariance = process_noise_covariance;
 }
 
 template <int state_size, int input_size, int measurement_size>

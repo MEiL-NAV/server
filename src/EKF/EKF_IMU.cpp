@@ -1,11 +1,10 @@
 #include "EKF_IMU.h"
-#include "Math.h"
 #include <iostream>
 
 
 EKF_IMU::EKF_IMU()
-    :   EKFConstraints(Eigen::Matrix<float, 13, 13>::Identity(),
-                       Eigen::Matrix<float, 3, 3>::Identity()),
+    :   EKFConstraints(1e-6f * Eigen::Matrix<float, 13, 13>::Identity(),
+                       1e-10f *Eigen::Matrix<float, 3, 3>::Identity()),
         last_update{0},
         delta_time{0.0f},
         g{0.0f,0.0f,9.805f}
@@ -13,7 +12,7 @@ EKF_IMU::EKF_IMU()
     state(3+3) = 1.0f; // init quaterion as 1,0,0,0
 
     // TODO: calibrate
-    constraint_correction_scaler = 0.3f;
+    constraint_correction_scaler = 5e-2f;
 }
 
 void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,

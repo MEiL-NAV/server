@@ -1,6 +1,7 @@
 #pragma once
 #include "EKFConstraints.h"
 #include "ConstraintsLoader.h"
+#include "Math.h"
 
 
 //State: x, y, z, vx, vy, vz, q0, qx, qy, qz, gyro_bias_x, gyro_bias_y, gyro_bias_z 
@@ -16,6 +17,7 @@ public:
     Eigen::Vector3f get_position() { return state.head<3>(); }
     Eigen::Vector3f get_velocity() { return state.segment<3>(3); }
     Eigen::Vector4f get_quaterion() { return state.segment<4>(6); }
+    Eigen::Vector3f get_rpy() { return quaterion_to_rpy(get_quaterion()); }
 
 protected:
     uint32_t last_update;

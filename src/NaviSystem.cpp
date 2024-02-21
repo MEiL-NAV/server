@@ -1,13 +1,14 @@
 #include "NaviSystem.hpp"
 #include <functional>
 #include <iostream>
+#include "Utilities/Converters.h"
 
 NaviSystem::NaviSystem()
-    :   PeriodicEvent(20, false),
+    :   PeriodicEvent(5, false),
         udp_listener{1234},
         time_synchronizer(5000,50000),
-        accelerometer(time_synchronizer),
-        gyroscope(time_synchronizer)
+        accelerometer(time_synchronizer,true),
+        gyroscope(time_synchronizer,false)
 
 {
     status_sock = zmq::socket_t(ctx, zmq::socket_type::pub);
@@ -24,9 +25,19 @@ NaviSystem::~NaviSystem()
 
 void NaviSystem::periodic_event() 
 {
-    ekf.update(Millis::get(),{0.2f, 0.5f, 3.8f},{0.0f, 0.0f, 9.805f});
-    //std::cout << ekf.get_state().segment<4>(6).norm() << std::endl;
-    send_status();
+    static uint8_t counter = 1;
+    if(accelerometer.healthy() && gyroscope.healthy())
+    {
+        auto accelerometer_reading = accelerometer.get_value();
+        auto gyroscope_reading = gyroscope.get_value();
+        auto time = (accelerometer_reading.first + gyroscope_reading.first) / 2.0f;
+        ekf.update(time, Converters::mdeg_to_radians(gyroscope_reading.second), accelerometer_reading.second);
+        if(counter++ % 10 == 0)
+        {
+            send_status();
+            std::cout << ekf.get_rpy().transpose() << std::endl;
+        }
+    }
 }
 
 void NaviSystem::messageHandler(const Message &msg) 
