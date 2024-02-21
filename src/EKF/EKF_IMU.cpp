@@ -9,7 +9,7 @@ EKF_IMU::EKF_IMU()
         delta_time{0.0f},
         g{0.0f,0.0f,9.805f}
 {
-
+    state(3+3) = 1.0f; // init quaterion as 1,0,0,0
     // TODO: calibrate
     constraint_correction_scaler = 0.0f;
 }

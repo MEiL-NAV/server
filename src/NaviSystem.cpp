@@ -24,9 +24,9 @@ NaviSystem::~NaviSystem()
 
 void NaviSystem::periodic_event() 
 {
-    ekf.update(Millis::get(),gyroscope.get_value().second,accelerometer.get_value().second);
-    send_status();
+    ekf.update(Millis::get(),{0.2f, 0.0f, 3.8f},{0.0f, 0.0f, 9.805f});
     std::cout << ekf.get_state().transpose() << std::endl;
+    send_status();
 }
 
 void NaviSystem::messageHandler(const Message &msg) 
