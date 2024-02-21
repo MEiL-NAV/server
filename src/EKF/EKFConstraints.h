@@ -17,10 +17,10 @@ public:
 protected:
     float constraint_correction_scaler = 1.0f;
 
-    virtual Eigen::Vector<float, state_size>
+    virtual Eigen::VectorXf
     constraints(const Eigen::Vector<float, state_size> &state) = 0;
 
-    virtual Eigen::Matrix<float, state_size, state_size>
+    virtual Eigen::MatrixXf
     constraints_derivative(const Eigen::Vector<float, state_size> &state) = 0;
 };
 
@@ -34,10 +34,10 @@ template <int state_size, int input_size, int measurement_size>
 inline Eigen::Vector<float, state_size> EKFConstraints<state_size, input_size, measurement_size>::apply_constraints(
     Eigen::Vector<float, state_size> state, Eigen::Matrix<float, state_size, state_size> covariance)
 {
-    Eigen::Matrix<float, state_size, state_size> D = constraints_derivative(state);
-    Eigen::Vector<float, state_size> d = -constraints(state) + D * state;
+    Eigen::MatrixXf D = constraints_derivative(state);
+    Eigen::VectorXf d = -constraints(state) + D * state;
 
-    Eigen::Matrix<float, state_size, state_size> P_inv = (D * (covariance * D.transpose())).completeOrthogonalDecomposition().pseudoInverse();
+    Eigen::MatrixXf P_inv = (D * (covariance * D.transpose())).completeOrthogonalDecomposition().pseudoInverse();
 
     return state - constraint_correction_scaler * covariance * D.transpose() * P_inv * (D * state - d);
 }

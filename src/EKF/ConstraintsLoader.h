@@ -6,7 +6,9 @@
 class ConstraintsLoader 
 {
 public:   
-    ConstraintsLoader() {
+    ConstraintsLoader()
+        : lib(NULL), valid(false) 
+    {
         lib = dlopen("./libconstraints.so", RTLD_NOW);
         if (!lib) 
         {
@@ -22,31 +24,36 @@ public:
             constraints_derivative_fun = reinterpret_cast<constraints_derivative_handle>(
                 dlsym(lib, "_Z22constraints_derivativeRKN5Eigen6MatrixIfLi13ELi1ELi0ELi13ELi1EEE"));    
         }
-        if (!constraints_fun) 
+
+        if (!constraints_fun || !constraints_derivative_fun) 
         {
-            std::cerr << "Failed to load function constraints: using default"  << std::endl;
+            std::cerr << "Failed to load functions: using default"  << std::endl;
+            constraints_fun = NULL;
+            constraints_derivative_fun = NULL;
         }
-        if (!constraints_derivative_fun) 
+        else
         {
-            std::cerr << "Failed to load function constraints_derivative: using default" << std::endl;
+            valid = true;
         }
     }
 
-    Eigen::Vector<float, 13>
+    Eigen::VectorXf
     constraints(const Eigen::Vector<float, 13> &state)
     {
         if(!constraints_fun)
-            return Eigen::Vector<float, 13>::Zero();
+            return Eigen::VectorXf::Zero(1);
         return constraints_fun(state);
     }
 
-    Eigen::Matrix<float, 13, 13>
+    Eigen::MatrixXf
     constraints_derivative(const Eigen::Vector<float, 13> &state)
     {
         if(!constraints_derivative_fun)
-            return Eigen::Matrix<float, 13, 13>::Identity();
+            return Eigen::MatrixXf::Ones(1,13);
         return constraints_derivative_fun(state);
     }
+
+    bool is_valid() { return valid; }
 
     ~ConstraintsLoader() {
         if(lib)
@@ -58,14 +65,15 @@ public:
 
 
 private:
-    typedef Eigen::Vector<float, 13>
+    typedef Eigen::VectorXf
     (*constraints_handle) (const Eigen::Vector<float, 13> &state);
 
-    typedef Eigen::Matrix<float, 13, 13>
+    typedef Eigen::MatrixXf
     (*constraints_derivative_handle) (const Eigen::Vector<float, 13> &state);
 
     constraints_handle constraints_fun;
     constraints_derivative_handle constraints_derivative_fun;
     void *lib;
+    bool valid;
 
 };

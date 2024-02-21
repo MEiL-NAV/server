@@ -11,10 +11,9 @@ EKF_IMU::EKF_IMU()
         g{0.0f,0.0f,9.805f}
 {
     state(3+3) = 1.0f; // init quaterion as 1,0,0,0
-    // TODO: calibrate
-    constraint_correction_scaler = 0.0f;
 
-    std::cout << constraints_loader.constraints_derivative(state) << std::endl;
+    // TODO: calibrate
+    constraint_correction_scaler = 0.3f;
 }
 
 void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
@@ -81,14 +80,20 @@ Eigen::Matrix<float, 3, 13> EKF_IMU::measurement_function_derivative(Eigen::Vect
     return H;
 }
 
-Eigen::Vector<float, 13> EKF_IMU::constraints(const Eigen::Vector<float, 13> &state)
+Eigen::VectorXf EKF_IMU::constraints(const Eigen::Vector<float, 13> &state)
 {
-    // TODO: implement
-    return Eigen::Vector<float, 13>::Zero();
+    if(constraints_loader.is_valid())
+    {
+        return constraints_loader.constraints(state);
+    }
+    return Eigen::VectorXf::Zero(1);
 }
 
-Eigen::Matrix<float, 13, 13> EKF_IMU::constraints_derivative(const Eigen::Vector<float, 13> &state)
+Eigen::MatrixXf EKF_IMU::constraints_derivative(const Eigen::Vector<float, 13> &state)
 {
-    // TODO: implement
-    return Eigen::Matrix<float, 13, 13>::Identity();
+    if(constraints_loader.is_valid())
+    {
+        return constraints_loader.constraints_derivative(state);
+    }
+    return Eigen::MatrixXf::Identity(1,13);
 }

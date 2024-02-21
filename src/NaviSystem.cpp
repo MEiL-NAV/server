@@ -24,8 +24,8 @@ NaviSystem::~NaviSystem()
 
 void NaviSystem::periodic_event() 
 {
-    ekf.update(Millis::get(),{0.2f, 0.0f, 3.8f},{0.0f, 0.0f, 9.805f});
-    //std::cout << ekf.get_state().transpose() << std::endl;
+    ekf.update(Millis::get(),{0.2f, 0.5f, 3.8f},{0.0f, 0.0f, 9.805f});
+    //std::cout << ekf.get_state().segment<4>(6).norm() << std::endl;
     send_status();
 }
 

@@ -36,10 +36,10 @@ protected:
     Eigen::Matrix<float,3,13>
     measurement_function_derivative(Eigen::Vector<float, 13> &state) override;
 
-    Eigen::Vector<float, 13>
+    Eigen::VectorXf
     constraints(const Eigen::Vector<float, 13> &state) override;
 
-    Eigen::Matrix<float, 13, 13>
+    Eigen::MatrixXf
     constraints_derivative(const Eigen::Vector<float, 13> &state) override;
                    
     Eigen::Vector<float, 3> g;
