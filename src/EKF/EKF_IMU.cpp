@@ -27,7 +27,7 @@ void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
         input.tail<3>() = acc_reading;
         predict(input);
         correct(acc_reading);
-        apply_constraints(state,covariance);
+        state = apply_constraints(state,covariance);
     }
 }
 

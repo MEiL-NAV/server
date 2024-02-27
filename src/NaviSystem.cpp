@@ -35,7 +35,6 @@ void NaviSystem::periodic_event()
         if(counter++ % 10 == 0)
         {
             send_status();
-            std::cout << ekf.get_rpy().transpose() << std::endl;
         }
     }
 }
@@ -86,4 +85,11 @@ void NaviSystem::send_status()
         ss.str("");
         status_sock.send(message,zmq::send_flags::none);
     }
+
+    ss << "s:" << ekf.get_state().format(commaFormat);
+    s = ss.str();
+    message.rebuild(s.data(), s.size());
+    ss.str("");
+    status_sock.send(message,zmq::send_flags::none);
+
 }
