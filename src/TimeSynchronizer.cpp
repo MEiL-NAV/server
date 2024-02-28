@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cassert>
 #include "Utilities/Millis.h"
-#include "Utilities/Logger.h"
+#include "Utilities/Loggers/Logger.h"
 
 TimeSynchronizer::TimeSynchronizer(uint32_t period_millis,
                                  uint16_t broadcast_port) 

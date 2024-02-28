@@ -45,6 +45,7 @@ public:
         log_mask = new_mask;
     }
 
+    static std::string get_log_dir();
 
 private:
     LogType log_type;
@@ -52,6 +53,7 @@ private:
     struct FileAccessor
     {
         std::mutex mtx;
+        std::string log_dir_path;
         std::ofstream file;
     };
 

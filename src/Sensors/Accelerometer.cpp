@@ -2,7 +2,7 @@
 #include <iostream>
 
 Accelerometer::Accelerometer(TimeSynchronizer &time_synchronizer, bool skip_calibration)
-    :   Sensor(time_synchronizer),
+    :   Sensor(time_synchronizer, "accel", "time,X,Y,Z,raw_X,raw_Y,raw_Z"),
         initialized{skip_calibration},
         bias{Eigen::Vector3f::Zero()},
         scalers{Eigen::Vector3f::Ones()}
@@ -25,6 +25,7 @@ void Accelerometer::consumeMessage(const Message &msg)
     last_update =  payload.time + offset.value();
     raw_value = Eigen::Vector3f(payload.X, payload.Y, payload.Z);
     value = (raw_value - bias).array() * scalers.array();
+    log();
 }
 
 void Accelerometer::calibrate(Eigen::Vector3f sample) 

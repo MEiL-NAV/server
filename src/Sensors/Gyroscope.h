@@ -3,6 +3,7 @@
 #include <eigen3/Eigen/Dense>
 #include <memory>
 #include "../Utilities/Filters/Filter.h"
+#include "../Utilities/Loggers/LoggerCSV.h"
 
 class Gyroscope : public Sensor<Eigen::Vector3f>
 {
@@ -18,7 +19,7 @@ private:
     Eigen::Vector3f bias;
 
     std::unique_ptr<Filter<Eigen::Vector3f>> filter;
-
+    
     void calibrate(Eigen::Vector3f sample);
 
     static constexpr float LPF_cufoff_freq = 20.0f;

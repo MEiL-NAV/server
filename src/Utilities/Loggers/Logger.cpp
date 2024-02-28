@@ -21,6 +21,13 @@ Logger &Logger::prefix()
     return *this;
 }
 
+std::string Logger::get_log_dir()
+{
+    init_file();
+    std::scoped_lock lck(file_accessor->mtx);
+    return file_accessor->log_dir_path;
+}
+
 const char *Logger::get_prefix()
 {
     switch (log_type)
@@ -62,7 +69,10 @@ void Logger::init_file()
     ofs << (run_number + 1);
     ofs.close();
 
-    std::string filename = log_path + std::to_string(run_number) + ".log";
+    std::filesystem::create_directory(log_path + std::to_string(run_number), ec);
+
     file_accessor = std::make_unique<FileAccessor>();
-    file_accessor->file.open(filename.c_str(), std::ofstream::out | std::ofstream::trunc);
+    std::scoped_lock lck(file_accessor->mtx);
+    file_accessor->log_dir_path = log_path + std::to_string(run_number) + "/";
+    file_accessor->file.open((file_accessor->log_dir_path + "server.log").c_str(), std::ofstream::out | std::ofstream::trunc);
 }

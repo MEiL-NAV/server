@@ -5,14 +5,16 @@
 #include "../Utilities/Millis.h"
 #include <iostream>
 #include <eigen3/Eigen/Dense>
+#include "../Utilities/Loggers/LoggerCSV.h"
 
 template <typename T>
 class Sensor
 {
 public:
-    Sensor(TimeSynchronizer& time_synchronizer) 
+    Sensor(TimeSynchronizer& time_synchronizer, std::string csv_filename, std::string csv_header = "") 
         :   time_synchronizer{time_synchronizer},
-            last_update{0U}
+            last_update{0U},
+            logger{csv_filename, csv_header}
     {}
 
     Sensor(TimeSynchronizer& time_synchronizer) requires(std::is_same_v<T, Eigen::Vector3f>)
@@ -24,7 +26,7 @@ public:
     
     virtual ~Sensor() {}
 
-    virtual void consumeMessage(const Message& msg) = 0;
+    virtual void consumeMessage([[maybe_unused]]const Message& msg) {};
 
     bool healthy()
     {
@@ -41,6 +43,13 @@ public:
         return {last_update, value};
     }
 
+    void log()
+    {
+        Eigen::VectorXf log;
+        log << last_update, value, raw_value; 
+        logger << log;
+    }
+
     static constexpr uint32_t timeout = 200;
 
 protected:
@@ -49,4 +58,5 @@ protected:
 
     T raw_value;
     T value;
+    LoggerCSV logger;
 };

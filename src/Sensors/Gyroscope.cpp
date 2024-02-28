@@ -1,15 +1,16 @@
 #include "Gyroscope.h"
 #include <iostream>
 #include "../Utilities/Statistics.h"
-#include "../Utilities/Logger.h"
+#include "../Utilities/Loggers/Logger.h"
 #include "../Utilities/Filters/LPF.h"
 
 Gyroscope::Gyroscope(TimeSynchronizer &time_synchronizer, bool skip_calibration)
-    :   Sensor(time_synchronizer),
+    :   Sensor(time_synchronizer, "gyro", "time,X,Y,Z,raw_X,raw_Y,raw_Z"),
         initialized{skip_calibration},
-        bias{Eigen::Vector3f::Zero()}
+        bias{Eigen::Vector3f::Zero()},
+        filter{std::make_unique<LPF<Eigen::Vector3f>>(LPF_cufoff_freq)}
 {
-    filter = std::make_unique<LPF<Eigen::Vector3f>>(LPF_cufoff_freq);
+
 }
 
 void Gyroscope::consumeMessage(const Message &msg)
@@ -26,10 +27,11 @@ void Gyroscope::consumeMessage(const Message &msg)
         return;
     }
     auto new_last_update = payload.time + offset.value();
-    raw_value = Eigen::Vector3f(payload.X, payload.Y, payload.Z) - bias;
+    raw_value = Eigen::Vector3f(payload.X, payload.Y, payload.Z);
     auto delta_time = static_cast<float>(new_last_update - last_update)/1000.0f;
-    value = filter->update(raw_value, delta_time);
+    value = filter->update(raw_value - bias, delta_time);
     last_update = new_last_update;
+    log();
 }
 
 void Gyroscope::calibrate(Eigen::Vector3f sample) 

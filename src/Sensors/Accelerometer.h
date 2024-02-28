@@ -1,7 +1,7 @@
 #include "Sensor.h"
 #include "../TimeSynchronizer.h"
 #include <eigen3/Eigen/Dense>
-#include "../Utilities/Logger.h"
+#include "../Utilities/Loggers/Logger.h"
 #include "../Utilities/Statistics.h"
 #include <cstdint>
 
