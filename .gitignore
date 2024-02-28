@@ -37,3 +37,4 @@ docs/
 *.out
 *.app
 !lib/libconstraints.so
+logs/

@@ -13,7 +13,7 @@ namespace
 int main()
 {
     Logger::set_mask(LogType::CALIBRATION | LogType::INFO);
-
+    Logger(LogType::INFO).prefix() << "Starting!\n";
     Millis::start();
     std::signal(SIGINT, 
         [](int sig) {
@@ -25,6 +25,6 @@ int main()
     );
     NaviSystem navi_sys;
     shutting_down.acquire();
-    Logger(LogType::INFO) << "Bye!\n";
+    Logger(LogType::INFO).prefix() << "Bye!\n";
     return 0;
 }

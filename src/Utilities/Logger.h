@@ -1,6 +1,9 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
+#include <memory>
+#include <mutex>
 
 enum LogType : int 
 {
@@ -16,7 +19,11 @@ class Logger
 public:
     Logger(LogType log_type)
         :   log_type{log_type}
-    {}
+    {
+        init_file();
+    }
+
+    Logger& prefix();
 
     template<typename T>
     Logger& operator<<(const T& obj)
@@ -24,6 +31,11 @@ public:
         if(log_mask & log_type)
         {
             std::cout << obj;
+        }
+        std::scoped_lock lck(file_accessor->mtx);
+        if(file_accessor->file.is_open())
+        {
+            file_accessor->file << obj;
         }
         return *this;
     }
@@ -37,5 +49,18 @@ public:
 private:
     LogType log_type;
 
+    struct FileAccessor
+    {
+        std::mutex mtx;
+        std::ofstream file;
+    };
+
+    static std::string log_path;
+    static std::string run_counter_path;
+
     static int log_mask;
+    static std::unique_ptr<FileAccessor> file_accessor;
+
+    const char* get_prefix();
+    static void init_file();
 };

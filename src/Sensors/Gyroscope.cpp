@@ -42,13 +42,13 @@ void Gyroscope::calibrate(Eigen::Vector3f sample)
         auto sd = statistic.sd();
         if(sd.maxCoeff() > sd_limit)
         {
-            logger << "Gyroscope calibration failed! sd: " << sd.maxCoeff() << " > " << sd_limit << "\n";
+            logger.prefix() << "Gyroscope calibration failed! sd: " << sd.maxCoeff() << " > " << sd_limit << "\n";
             statistic.reset();
             return;
         }
 
         bias = statistic.mean();
         initialized = true;
-        logger << "Gyroscope calibrated! Bias: " << bias.transpose() << ", sd: " << sd.transpose() << "\n";
+        logger.prefix() << "Gyroscope calibrated! Bias: " << bias.transpose() << ", sd: " << sd.transpose() << "\n";
     }
 }

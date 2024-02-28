@@ -35,7 +35,7 @@ void Accelerometer::calibrate(Eigen::Vector3f sample)
     }
     bias = calibration.calculate_bias();
     scalers = calibration.calculate_scalers();
-    Logger(LogType::CALIBRATION) << "Accelerometer calibrated! Bias: " 
+    Logger(LogType::CALIBRATION).prefix() << "Accelerometer calibrated! Bias: " 
         << bias.transpose() << ", scalers: " << scalers.transpose() << "\n";
     initialized = true;
 }
@@ -59,7 +59,7 @@ bool AccelerometerCalibration::calibrate(Eigen::Vector3f sample)
         }
         else
         {
-            logger << "Accelerometer sd: " << statistic.sd().transpose() << "\n";
+            logger.prefix() << "Accelerometer sd: " << statistic.sd().transpose() << "\n";
         }
         statistic.reset();
     }
@@ -131,27 +131,27 @@ void AccelerometerCalibration::save_mean(Eigen::Vector3f mean)
             return;
         case side::FRONT:
             max.x() = mean.x();
-            logger << "Detected FRONT side\n";
+            logger.prefix() << "Detected FRONT side\n";
             break;
         case side::BACK:
             min.x() = mean.x();
-            logger << "Detected BACK side\n";
+            logger.prefix() << "Detected BACK side\n";
             break;
         case side::LEFT:
             max.y() = mean.y();
-            logger << "Detected LEFT side\n";
+            logger.prefix() << "Detected LEFT side\n";
             break;
         case side::RIGHT:
             min.y() = mean.y();
-            logger << "Detected RIGHT side\n";
+            logger.prefix() << "Detected RIGHT side\n";
             break;
         case side::TOP:
             max.z() = mean.z();
-            logger << "Detected TOP side\n";
+            logger.prefix() << "Detected TOP side\n";
             break;
         case side::BUTTOM:
             min.z() = mean.z();
-            logger << "Detected BUTTOM side\n";
+            logger.prefix() << "Detected BUTTOM side\n";
             break;
     }
 
