@@ -38,19 +38,24 @@ void Gyroscope::calibrate(Eigen::Vector3f sample)
 {
     static Statistics<Eigen::Vector3f> statistic(1000);
     static Logger logger(LogType::CALIBRATION);
+    static Eigen::IOFormat commaFormat(3, Eigen::DontAlignCols," ",",");
+    std::stringstream ss;
+    ss.precision(3);
 
     if(statistic.push_sample(sample))
     {
         auto sd = statistic.sd();
         if(sd.maxCoeff() > sd_limit)
         {
-            logger.prefix() << "Gyroscope calibration failed! sd: " << sd.maxCoeff() << " > " << sd_limit << "\n";
+            logger("Gyroscope calibration failed! sd: " + std::to_string(sd.maxCoeff()) + " > " + std::to_string(sd_limit));
             statistic.reset();
             return;
         }
 
         bias = statistic.mean();
         initialized = true;
-        logger.prefix() << "Gyroscope calibrated! Bias: " << bias.transpose() << ", sd: " << sd.transpose() << "\n";
+
+        ss << "Gyroscope calibrated! Bias: " << bias.format(commaFormat) << ", sd: " << sd.format(commaFormat);
+        logger(ss.str());
     }
 }

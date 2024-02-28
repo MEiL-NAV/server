@@ -30,14 +30,20 @@ void Accelerometer::consumeMessage(const Message &msg)
 
 void Accelerometer::calibrate(Eigen::Vector3f sample) 
 {
+    static Eigen::IOFormat commaFormat(3, Eigen::DontAlignCols," ",",");
+    std::stringstream ss;
+    ss.precision(3);
+
     if (!calibration.calibrate(sample))
     {
         return;
     }
     bias = calibration.calculate_bias();
     scalers = calibration.calculate_scalers();
-    Logger(LogType::CALIBRATION).prefix() << "Accelerometer calibrated! Bias: " 
-        << bias.transpose() << ", scalers: " << scalers.transpose() << "\n";
+    ss << "Accelerometer calibrated! Bias: " 
+        << bias.format(commaFormat) << ", scalers: " << scalers.format(commaFormat);
+
+    Logger(LogType::CALIBRATION)(ss.str());
     initialized = true;
 }
 
@@ -51,6 +57,10 @@ AccelerometerCalibration::AccelerometerCalibration()
 
 bool AccelerometerCalibration::calibrate(Eigen::Vector3f sample)
 {
+    static Eigen::IOFormat commaFormat(3, Eigen::DontAlignCols," ",",");
+    std::stringstream ss;
+    ss.precision(3);
+
     if(statistic.push_sample(sample))
     {
         auto sd_max = statistic.sd().maxCoeff();
@@ -60,7 +70,8 @@ bool AccelerometerCalibration::calibrate(Eigen::Vector3f sample)
         }
         else
         {
-            logger.prefix() << "Accelerometer sd: " << statistic.sd().transpose() << "\n";
+            ss << "Accelerometer sd: " << statistic.sd().format(commaFormat);
+            logger(ss.str());
         }
         statistic.reset();
     }
@@ -132,27 +143,27 @@ void AccelerometerCalibration::save_mean(Eigen::Vector3f mean)
             return;
         case side::FRONT:
             max.x() = mean.x();
-            logger.prefix() << "Detected FRONT side\n";
+            logger("Detected FRONT side");
             break;
         case side::BACK:
             min.x() = mean.x();
-            logger.prefix() << "Detected BACK side\n";
+            logger("Detected BACK side");
             break;
         case side::LEFT:
             max.y() = mean.y();
-            logger.prefix() << "Detected LEFT side\n";
+            logger("Detected LEFT side");
             break;
         case side::RIGHT:
             min.y() = mean.y();
-            logger.prefix() << "Detected RIGHT side\n";
+            logger("Detected RIGHT side");
             break;
         case side::TOP:
             max.z() = mean.z();
-            logger.prefix() << "Detected TOP side\n";
+            logger("Detected TOP side");
             break;
         case side::BUTTOM:
             min.z() = mean.z();
-            logger.prefix() << "Detected BUTTOM side\n";
+            logger("Detected BUTTOM side");
             break;
     }
 

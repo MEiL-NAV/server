@@ -40,8 +40,8 @@ void TimeSynchronizer::consumeMessage(const Message &msg)
         static_cast<int32_t>((millis + std::get<1>(last_sync_time)) / 2U) -
         static_cast<int32_t>(payload.time);
     }
-    logger.prefix() << "Node " << +msg.node_id << " offset set to "
-      	<< offset_table[msg.node_id] << " ms. Ping: " << ping << "ms\n";
+    logger(std::string("Node ") + std::to_string(msg.node_id) + " offset set to "
+      	+ std::to_string(offset_table[msg.node_id]) + " ms. Ping: " + std::to_string(ping) + "ms");
 }
 
 void TimeSynchronizer::periodic_event() 

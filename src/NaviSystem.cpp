@@ -3,12 +3,13 @@
 #include <iostream>
 #include "Utilities/Converters.h"
 
-NaviSystem::NaviSystem()
+NaviSystem::NaviSystem(zmq::context_t& ctx)
     :   PeriodicEvent(5, false),
         udp_listener{1234},
         time_synchronizer(5000,50000),
-        accelerometer(time_synchronizer,true),
-        gyroscope(time_synchronizer,false)
+        accelerometer(time_synchronizer,false),
+        gyroscope(time_synchronizer,false),
+        ctx{ctx}
 
 {
     status_sock = zmq::socket_t(ctx, zmq::socket_type::pub);
@@ -20,7 +21,7 @@ NaviSystem::NaviSystem()
 
 NaviSystem::~NaviSystem() 
 {
-
+    status_sock.close();
 }
 
 void NaviSystem::periodic_event() 

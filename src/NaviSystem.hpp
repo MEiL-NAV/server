@@ -10,7 +10,7 @@
 class NaviSystem : public PeriodicEvent
 {
 public:
-    NaviSystem();
+    NaviSystem(zmq::context_t& ctx);
     virtual ~NaviSystem();
 
 protected:
@@ -26,7 +26,7 @@ private:
     Gyroscope gyroscope;
 
     // ZMQ
-    zmq::context_t ctx;
+    zmq::context_t& ctx;
     zmq::socket_t status_sock;
     static constexpr const char* status_address = "tcp://*:5555";
 

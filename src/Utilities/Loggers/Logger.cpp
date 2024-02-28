@@ -1,31 +1,62 @@
 #include "Logger.h"
 #include <filesystem>
+#include <thread>
 
 int Logger::log_mask = -1;
 std::unique_ptr<Logger::FileAccessor> Logger::file_accessor = nullptr;
 std::string Logger::log_path = "../logs/";
 std::string Logger::run_counter_path = "../logs/run_counter";
+std::unique_ptr<zmq::socket_t> Logger::logger_socket = nullptr;
 
-Logger &Logger::prefix()
+void Logger::operator()(const std::string &msg)
 {
-    auto prefix = get_prefix();
+    std::string msg_with_prefix = get_prefix() + msg;
     if(log_mask & log_type)
     {
-        std::cout << prefix;
+        std::cout << msg_with_prefix << std::endl;
     }
+
+    if(logger_socket != nullptr)
+    {
+        std::string message_zmq = std::string("c:") + msg_with_prefix;
+        zmq::message_t zmq_msg(message_zmq.data(),message_zmq.size());
+        logger_socket->send(zmq_msg, zmq::send_flags::none);
+    }
+    
     std::scoped_lock lck(file_accessor->mtx);
     if(file_accessor->file.is_open())
     {
-        file_accessor->file << prefix;
+        file_accessor->file << msg_with_prefix << std::endl;;
     }
-    return *this;
 }
 
-std::string Logger::get_log_dir()
+void Logger::set_ctx(zmq::context_t &ctx)
 {
-    init_file();
-    std::scoped_lock lck(file_accessor->mtx);
-    return file_accessor->log_dir_path;
+    logger_socket = std::make_unique<zmq::socket_t>(ctx, zmq::socket_type::pub);
+    logger_socket->bind(logger_address);
+    logger_socket->send(zmq::message_t(), zmq::send_flags::none);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+}
+
+void Logger::set_mask(int new_mask)
+{
+    log_mask = new_mask;
+}
+
+void Logger::deconstruct()
+{
+    if(logger_socket != nullptr)
+    {
+        logger_socket->close();
+    }
+    file_accessor->file.close();
+}
+
+
+std::string Logger::get_log_dir() {
+  init_file();
+  std::scoped_lock lck(file_accessor->mtx);
+  return file_accessor->log_dir_path;
 }
 
 const char *Logger::get_prefix()

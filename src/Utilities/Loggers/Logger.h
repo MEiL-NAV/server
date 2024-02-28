@@ -4,6 +4,7 @@
 #include <fstream>
 #include <memory>
 #include <mutex>
+#include <zmq.hpp>
 
 enum LogType : int 
 {
@@ -22,29 +23,12 @@ public:
     {
         init_file();
     }
-
-    Logger& prefix();
-
-    template<typename T>
-    Logger& operator<<(const T& obj)
-    {
-        if(log_mask & log_type)
-        {
-            std::cout << obj;
-        }
-        std::scoped_lock lck(file_accessor->mtx);
-        if(file_accessor->file.is_open())
-        {
-            file_accessor->file << obj;
-        }
-        return *this;
-    }
-
-    static void set_mask(int new_mask)
-    {
-        log_mask = new_mask;
-    }
-
+    
+    void operator()(const std::string& msg);
+    
+    static void set_ctx(zmq::context_t& ctx);
+    static void set_mask(int new_mask);
+    static void deconstruct();
     static std::string get_log_dir();
 
 private:
@@ -62,6 +46,9 @@ private:
 
     static int log_mask;
     static std::unique_ptr<FileAccessor> file_accessor;
+
+    static std::unique_ptr<zmq::socket_t> logger_socket;
+    static constexpr const char* logger_address = "tcp://*:6666";
 
     const char* get_prefix();
     static void init_file();

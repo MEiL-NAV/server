@@ -45,8 +45,10 @@ public:
 
     void log()
     {
-        Eigen::VectorXf log;
-        log << last_update, value, raw_value; 
+        Eigen::VectorXf log(7);
+        log(0) = last_update;
+        log.segment<3>(1) =  value;
+        log.segment<3>(4) =  raw_value; 
         logger << log;
     }
 

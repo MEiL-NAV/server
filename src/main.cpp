@@ -1,6 +1,7 @@
 #include <iostream>
 #include <csignal>
 #include <semaphore>
+#include <zmq.hpp>
 #include "NaviSystem.hpp"
 #include "Utilities/Millis.h"
 #include "Utilities/Loggers/Logger.h"
@@ -12,8 +13,11 @@ namespace
 
 int main()
 {
+    zmq::context_t ctx;
+    Logger::set_ctx(ctx);
     Logger::set_mask(LogType::CALIBRATION | LogType::INFO);
-    Logger(LogType::INFO).prefix() << "Starting!\n";
+    Logger logger(LogType::INFO);
+    logger("Starting!");
     Millis::start();
     std::signal(SIGINT, 
         [](int sig) {
@@ -23,8 +27,9 @@ int main()
             }
         }
     );
-    NaviSystem navi_sys;
+    NaviSystem navi_sys{ctx};
     shutting_down.acquire();
-    Logger(LogType::INFO).prefix() << "Bye!\n";
+    logger("Bye!");
+    Logger::deconstruct();
     return 0;
 }
