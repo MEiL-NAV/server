@@ -9,6 +9,7 @@ NaviSystem::NaviSystem(zmq::context_t& ctx)
         time_synchronizer(5000,50000),
         accelerometer(time_synchronizer,false),
         gyroscope(time_synchronizer,false),
+        position_provider(time_synchronizer),
         ctx{ctx}
 
 {
@@ -52,6 +53,9 @@ void NaviSystem::messageHandler(const Message &msg)
             return;
         case Command::GYROSCOPE_READING:
             gyroscope.consumeMessage(msg);
+            return;
+        case Command::POSITION_READING:
+            position_provider.consumeMessage(msg);
             return;
         default:
             return;

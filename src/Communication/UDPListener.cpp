@@ -36,7 +36,7 @@ void UDPListener::initialize_socket() {
     // Set timeout on socket
     struct timeval tv{0, 100000};
     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO,&tv,sizeof(tv)) < 0) {
-        perror("Timeout set rrror");
+        perror("Timeout set error");
     }
 
     // Set up server address

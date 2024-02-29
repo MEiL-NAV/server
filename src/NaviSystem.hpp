@@ -3,6 +3,7 @@
 #include "TimeSynchronizer.h"
 #include "Sensors/Accelerometer.h"
 #include "Sensors/Gyroscope.h"
+#include "Sensors/PositionProvider.h"
 #include "Utilities/PeriodicEvent.h"
 #include <zmq.hpp>
 #include "EKF/EKF_IMU.h"
@@ -24,6 +25,7 @@ private:
     // Sensors
     Accelerometer accelerometer;
     Gyroscope gyroscope;
+    PositionProvider position_provider;
 
     // ZMQ
     zmq::context_t& ctx;

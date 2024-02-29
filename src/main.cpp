@@ -15,7 +15,7 @@ int main()
 {
     zmq::context_t ctx;
     Logger::set_ctx(ctx);
-    Logger::set_mask(LogType::CALIBRATION | LogType::INFO);
+    Logger::set_mask(LogType::CALIBRATION | LogType::INFO | LogType::DEBUG | LogType::ERROR | LogType::SYNC);
     Logger logger(LogType::INFO);
     logger("Starting!");
     Millis::start();

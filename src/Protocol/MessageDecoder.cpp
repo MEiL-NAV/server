@@ -48,6 +48,7 @@ Payload MessageDecoder::parsePayload(Command command, uint8_t *buffer,
         break;
         case Command::ACCELEROMETER_READING:
         case Command::GYROSCOPE_READING:
+        case Command::POSITION_READING:
             return parse<VectorPacket>(buffer,buffer_size);
         break;
     }

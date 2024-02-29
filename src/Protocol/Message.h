@@ -10,7 +10,8 @@ enum Command : uint8_t
     TIMESYNC                = 1,
     DUMMY                   = 2,
     ACCELEROMETER_READING   = 3,
-    GYROSCOPE_READING       = 4
+    GYROSCOPE_READING       = 4,
+    POSITION_READING        = 5,
 };
 
 typedef std::variant<TimeSyncPacket,DummySensorPacket, VectorPacket> Payload;

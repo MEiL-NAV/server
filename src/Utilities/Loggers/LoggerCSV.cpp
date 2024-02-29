@@ -14,7 +14,7 @@ LoggerCSV::~LoggerCSV()
 
 void LoggerCSV::operator<<(const Eigen::VectorXf &vec)
 {
-    static Eigen::IOFormat commaFormat(3, Eigen::DontAlignCols," ",",");
+    static Eigen::IOFormat commaFormat(Eigen::FullPrecision, Eigen::DontAlignCols," ",",");
     if (ofs.is_open())
     {
         ofs << vec.format(commaFormat) << std::endl;

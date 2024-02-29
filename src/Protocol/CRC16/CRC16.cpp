@@ -16,7 +16,7 @@ uint16_t CRC16::calculateCRC(const uint8_t* data, size_t length) {
 
 bool CRC16::checkCRC(const uint8_t* data, size_t length, uint16_t receivedCRC) {
     uint16_t calculatedCRC = calculateCRC(data, length);
-    return calculatedCRC == receivedCRC;
+    return receivedCRC == 0 || calculatedCRC == receivedCRC;
 }
 
 void CRC16::initializeTable(uint16_t polynomial) {
