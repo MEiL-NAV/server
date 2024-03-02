@@ -16,7 +16,11 @@ Config::Config(const char *config_file_path)
         run_counter_path = config["run_counter_path"].as<std::string>();
         logger_address = config["logger_address"].as<std::string>();
 
+        sensor_multicast_address = config["sensor_multicast_address"].as<std::string>();
+        sensor_multicast_port = config["sensor_multicast_port"].as<uint16_t>();
+
         time_sync_period_ms = config["time_sync_period_ms"].as<uint32_t>();
+        time_sync_address = config["time_sync_address"].as<std::string>();
         time_sync_port = config["time_sync_port"].as<uint16_t>();
 
         accelerometer_calibration = config["accelerometer_calibration"].as<bool>();
@@ -49,10 +53,14 @@ Config::~Config()
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Time sync:");
         out << YAML::Key << "time_sync_period_ms" << YAML::Value << time_sync_period_ms;
+        out << YAML::Key << "time_sync_address" << YAML::Value << time_sync_address;
         out << YAML::Key << "time_sync_port" << YAML::Value << time_sync_port;
 
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Sensors config:");
+        out << YAML::Key << "sensor_multicast_address" << YAML::Value << sensor_multicast_address;
+        out << YAML::Key << "sensor_multicast_port" << YAML::Value << sensor_multicast_port;
+        out << YAML::Key << "accelerometer_calibration" << YAML::Value << accelerometer_calibration;
         out << YAML::Key << "accelerometer_calibration" << YAML::Value << accelerometer_calibration;
         out << YAML::Key << "accelerometer_R" << YAML::Value << YAML::convert<Eigen::Matrix3f>::encode(accelerometer_R);
         out << YAML::Key << "accelerometer_bias" << YAML::Value << YAML::convert<Eigen::Vector3f>::encode(accelerometer_bias);
@@ -96,9 +104,12 @@ void Config::restore_defaults()
 
     // Time sync:
     time_sync_period_ms = 5000;
+    time_sync_address = "224.0.0.100";
     time_sync_port = 50000;
 
     // Sensors config:
+    sensor_multicast_address = "224.0.0.100";
+    sensor_multicast_port = 1234;
     accelerometer_calibration = true;
     accelerometer_R = Eigen::Matrix3f::Identity();
     accelerometer_bias = Eigen::Vector3f::Zero();

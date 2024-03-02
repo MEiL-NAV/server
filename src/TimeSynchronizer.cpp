@@ -5,8 +5,9 @@
 #include "Utilities/Loggers/Logger.h"
 
 TimeSynchronizer::TimeSynchronizer(uint32_t period_millis,
-                                 uint16_t broadcast_port) 
-    : PeriodicEvent(period_millis), udp_broadcaster(broadcast_port)
+                                   std::string multicast_address, 
+                                   uint16_t broadcast_port) 
+    : PeriodicEvent(period_millis), udp_multicaster(multicast_address, broadcast_port)
 {
 
 }
@@ -54,6 +55,6 @@ void TimeSynchronizer::periodic_event()
     std::array<uint8_t,2> message;
     message[0] = 'S';
     message[1] = sync_id;
-    udp_broadcaster.send(message);
+    udp_multicaster.send(message);
     sync_id++;
 }

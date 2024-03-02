@@ -7,8 +7,8 @@
 
 #include "../Protocol/MessageDecoder.h"
 
-UDPListener::UDPListener(uint16_t port) 
-    : port(port), sockfd(-1), is_listening(true) {
+UDPListener::UDPListener(std::string multicast_address, uint16_t port) 
+    : multicast_address{multicast_address}, port(port), sockfd(-1), is_listening(true) {
     initialize_socket();
     start_listening_thread();
 }
@@ -26,7 +26,6 @@ void UDPListener::set_message_event(std::function<void(const Message &)> func)
 }
 
 void UDPListener::initialize_socket() {
-    // Create UDP socket
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd == -1) {
         perror("Socket creation failed");
@@ -35,20 +34,37 @@ void UDPListener::initialize_socket() {
 
     // Set timeout on socket
     struct timeval tv{0, 100000};
-    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO,&tv,sizeof(tv)) < 0) {
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         perror("Timeout set error");
+    }
+
+    // Allow multiple sockets to use the same port number
+    int reuse = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+        perror("SO_REUSEADDR failed");
     }
 
     // Set up server address
     struct sockaddr_in serverAddress;
     memset(&serverAddress, 0, sizeof(serverAddress));
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
+    serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
     serverAddress.sin_port = htons(port);
 
     // Bind the socket
     if (bind(sockfd, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1) {
         perror("Socket binding failed");
+        close(sockfd);
+        sockfd = -1;
+        return;
+    }
+
+    // Join the multicast group
+    struct ip_mreq mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(multicast_address.c_str());
+    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    if (setsockopt(sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq)) < 0) {
+        perror("Joining multicast group failed");
         close(sockfd);
         sockfd = -1;
         return;

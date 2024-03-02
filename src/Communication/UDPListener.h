@@ -6,7 +6,7 @@
 
 class UDPListener {
 public:
-    UDPListener(uint16_t port);
+    UDPListener(std::string multicast_address, uint16_t port);
     ~UDPListener();
 
     void set_message_event(std::function<void(const Message&)> func);
@@ -18,6 +18,7 @@ private:
     void receive();
 
 private:
+    std::string multicast_address;
     uint16_t port;
     int sockfd;
     std::atomic_bool is_listening;

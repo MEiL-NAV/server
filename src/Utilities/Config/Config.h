@@ -15,7 +15,11 @@ public:
     std::string run_counter_path;
     std::string logger_address;
 
+    std::string sensor_multicast_address;
+    uint16_t sensor_multicast_port;
+
     uint32_t time_sync_period_ms;
+    std::string time_sync_address;
     uint16_t time_sync_port;
 
     bool accelerometer_calibration;
