@@ -30,7 +30,6 @@ int main()
     );
     NaviSystem navi_sys{ctx, config};
     shutting_down.acquire();
-    // std::cout << config.log_dir_path << std::endl;
     logger("Bye!");
     Logger::deconstruct();
     return 0;

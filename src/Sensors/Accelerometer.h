@@ -5,6 +5,17 @@
 #include "../Utilities/Statistics.h"
 #include <cstdint>
 
+struct AccelerometerCalibrationCoefficients
+{
+    AccelerometerCalibrationCoefficients()
+        : R{Eigen::Matrix3f::Identity()},
+          b{Eigen::Vector3f::Zero()}
+    {}
+
+    Eigen::Matrix3f R;
+    Eigen::Vector3f b;
+};
+
 class AccelerometerCalibration
 {
 public:
@@ -12,12 +23,11 @@ public:
 
     bool calibrate(Eigen::Vector3f sample);
 
-    Eigen::Vector3f calculate_bias();
-    Eigen::Vector3f calculate_scalers();
+    AccelerometerCalibrationCoefficients calculate();
 
 private:
-    Eigen::Vector3f max;
-    Eigen::Vector3f min;
+    Eigen::Matrix<float, 3, 6> readings;
+    Eigen::Matrix<float, 3, 6> expected;
     Statistics<Eigen::Vector3f> statistic;
     Logger logger;
     uint8_t checked_sides;
@@ -61,8 +71,7 @@ public:
 private:
     bool initialized;
 
-    Eigen::Vector3f bias;
-    Eigen::Vector3f scalers;
+    AccelerometerCalibrationCoefficients coefficients;
 
     AccelerometerCalibration calibration;
 

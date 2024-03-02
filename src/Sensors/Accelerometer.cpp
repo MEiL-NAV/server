@@ -7,8 +7,6 @@ Accelerometer::Accelerometer(TimeSynchronizer &time_synchronizer, bool skip_cali
         initialized{skip_calibration}
 {
     auto config = Config::get_singleton();
-    bias = Eigen::Vector3f(config.accelerometer_bias_x, config.accelerometer_bias_y, config.accelerometer_bias_z);
-    scalers = Eigen::Vector3f(config.accelerometer_scalers_x, config.accelerometer_scalers_y, config.accelerometer_scalers_z);
 }
 
 Accelerometer::~Accelerometer() 
@@ -16,12 +14,8 @@ Accelerometer::~Accelerometer()
     if(initialized)
     {
         auto config = Config::get_singleton_mut();
-        config.accelerometer_bias_x = bias.x();
-        config.accelerometer_bias_y = bias.y();
-        config.accelerometer_bias_z = bias.z();
-        config.accelerometer_scalers_x = scalers.x();
-        config.accelerometer_scalers_y = scalers.y();
-        config.accelerometer_scalers_z = scalers.z();
+        config.accelerometer_R = coefficients.R;
+        config.accelerometer_bias = coefficients.b;
     }
 }
 
@@ -40,7 +34,7 @@ void Accelerometer::consumeMessage(const Message &msg)
     }
     last_update =  payload.time + offset.value();
     raw_value = Eigen::Vector3f(payload.X, payload.Y, payload.Z);
-    value = (raw_value - bias).array() * scalers.array();
+    value = coefficients.R * raw_value + coefficients.b;
     log();
 }
 
@@ -54,18 +48,17 @@ void Accelerometer::calibrate(Eigen::Vector3f sample)
     {
         return;
     }
-    bias = calibration.calculate_bias();
-    scalers = calibration.calculate_scalers();
+    coefficients = calibration.calculate();
     ss << "Accelerometer calibrated! Bias: " 
-        << bias.format(commaFormat) << ", scalers: " << scalers.format(commaFormat);
+        << coefficients.b.format(commaFormat);
 
     Logger(LogType::CALIBRATION)(ss.str());
     initialized = true;
 }
 
 AccelerometerCalibration::AccelerometerCalibration()
-    :   max{Eigen::Vector3f::Zero()},
-        min{Eigen::Vector3f::Zero()},
+    :   readings{Eigen::Matrix<float,3,6>::Zero()},
+        expected{Eigen::Matrix<float,3,6>::Zero()},
         statistic(500),
         logger(LogType::CALIBRATION),
         checked_sides{0}
@@ -94,14 +87,36 @@ bool AccelerometerCalibration::calibrate(Eigen::Vector3f sample)
     return 0b00111111 == checked_sides; // All sides checked
 }
 
-Eigen::Vector3f AccelerometerCalibration::calculate_bias()
+AccelerometerCalibrationCoefficients AccelerometerCalibration::calculate()
 {
-    return (max + min) / 2.0f;
-}
+    Eigen::Vector<float, 18> Y;
+    Y << expected.col(0), expected.col(1), expected.col(2), expected.col(3), expected.col(4), expected.col(5);
+    Eigen::MatrixXf X = Eigen::MatrixXf::Zero(18,12);
+    for (size_t i = 0; i < 6; i++) 
+    {
+        X(i * 3, 0) = readings(0, i);
+        X(i * 3, 1) = readings(1, i);
+        X(i * 3, 2) = readings(2, i);
+        X(i * 3, 3) = 1.0f;
+        X(i * 3 + 1, 4) = readings(0, i);
+        X(i * 3 + 1, 5) = readings(1, i);
+        X(i * 3 + 1, 6) = readings(2, i);
+        X(i * 3 + 1, 7) = 1.0f;
+        X(i * 3 + 2, 8) = readings(0, i);
+        X(i * 3 + 2, 9) = readings(1, i);
+        X(i * 3 + 2, 10) = readings(2, i);
+        X(i * 3 + 2, 11) = 1.0f;
+    }
+    Eigen::Vector<float, 12> THETA = (X.transpose() * X).ldlt().solve(X.transpose() * Y);
+    Eigen::Matrix<float, 3, 4> A;
+    A.row(0) = THETA.segment<4>(0).transpose();
+    A.row(1) = THETA.segment<4>(4).transpose();
+    A.row(2) = THETA.segment<4>(8).transpose();
 
-Eigen::Vector3f AccelerometerCalibration::calculate_scalers()
-{
-    return  (G * Eigen::Vector3f::Ones()).array() / ((max - min) / 2.0f).array();
+    AccelerometerCalibrationCoefficients coefficients;
+    coefficients.R = A.block<3,3>(0,0);
+    coefficients.b = A.block<3,1>(0,3);
+    return coefficients;
 }
 
 uint8_t AccelerometerCalibration::calc_sign(Eigen::Vector3f mean)
@@ -158,27 +173,33 @@ void AccelerometerCalibration::save_mean(Eigen::Vector3f mean)
         case side::INVALID_SIDE:
             return;
         case side::FRONT:
-            max.x() = mean.x();
+            readings.col(0) = mean;
+            expected.col(0) = Eigen::Vector3f(G,0.0f, 0.0f);
             logger("Detected FRONT side");
             break;
         case side::BACK:
-            min.x() = mean.x();
+            readings.col(1) = mean;
+            expected.col(1) = Eigen::Vector3f(-G,0.0f, 0.0f);
             logger("Detected BACK side");
             break;
         case side::LEFT:
-            max.y() = mean.y();
+            readings.col(2) = mean;
+            expected.col(2) = Eigen::Vector3f(0.0f, G, 0.0f);
             logger("Detected LEFT side");
             break;
         case side::RIGHT:
-            min.y() = mean.y();
+            readings.col(3) = mean;
+            expected.col(3) = Eigen::Vector3f(0.0f, -G, 0.0f);
             logger("Detected RIGHT side");
             break;
         case side::TOP:
-            max.z() = mean.z();
+            readings.col(4) = mean;
+            expected.col(4) = Eigen::Vector3f(0.0f, 0.0f, G);
             logger("Detected TOP side");
             break;
         case side::BUTTOM:
-            min.z() = mean.z();
+            readings.col(5) = mean;
+            expected.col(5) = Eigen::Vector3f(0.0f, 0.0f, -G);
             logger("Detected BUTTOM side");
             break;
     }

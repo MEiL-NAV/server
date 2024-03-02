@@ -2,6 +2,7 @@
 #include <iostream>
 #include <yaml-cpp/yaml.h>
 #include "../Loggers/Logger.h"
+#include "yaml_extender.h"
 
 std::unique_ptr<Config> Config::singleton = nullptr;
 
@@ -19,12 +20,8 @@ Config::Config(const char *config_file_path)
         time_sync_port = config["time_sync_port"].as<uint16_t>();
 
         accelerometer_calibration = config["accelerometer_calibration"].as<bool>();
-        accelerometer_bias_x = config["accelerometer_bias_x"].as<float>();
-        accelerometer_bias_y = config["accelerometer_bias_y"].as<float>();
-        accelerometer_bias_z = config["accelerometer_bias_z"].as<float>();
-        accelerometer_scalers_x = config["accelerometer_scalers_x"].as<float>();
-        accelerometer_scalers_y = config["accelerometer_scalers_y"].as<float>();
-        accelerometer_scalers_z = config["accelerometer_scalers_z"].as<float>();
+        accelerometer_R = config["accelerometer_R"].as<Eigen::Matrix3f>();
+        accelerometer_bias = config["accelerometer_bias"].as<Eigen::Vector3f>();
 
         loop_rate_ms = config["loop_rate_ms"].as<uint32_t>();
     }
@@ -57,12 +54,8 @@ Config::~Config()
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Sensors config:");
         out << YAML::Key << "accelerometer_calibration" << YAML::Value << accelerometer_calibration;
-        out << YAML::Key << "accelerometer_bias_x" << YAML::Value << accelerometer_bias_x;
-        out << YAML::Key << "accelerometer_bias_y" << YAML::Value << accelerometer_bias_y;
-        out << YAML::Key << "accelerometer_bias_z" << YAML::Value << accelerometer_bias_z;
-        out << YAML::Key << "accelerometer_scalers_x" << YAML::Value << accelerometer_scalers_x;
-        out << YAML::Key << "accelerometer_scalers_y" << YAML::Value << accelerometer_scalers_y;
-        out << YAML::Key << "accelerometer_scalers_z" << YAML::Value << accelerometer_scalers_z;
+        out << YAML::Key << "accelerometer_R" << YAML::Value << YAML::convert<Eigen::Matrix3f>::encode(accelerometer_R);
+        out << YAML::Key << "accelerometer_bias" << YAML::Value << YAML::convert<Eigen::Vector3f>::encode(accelerometer_bias);
         
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Other:");
@@ -107,12 +100,8 @@ void Config::restore_defaults()
 
     // Sensors config:
     accelerometer_calibration = true;
-    accelerometer_bias_x = 0.0f;
-    accelerometer_bias_y = 0.0f;
-    accelerometer_bias_z = 0.0f;
-    accelerometer_scalers_x = 1.0f;
-    accelerometer_scalers_y = 1.0f;
-    accelerometer_scalers_z = 1.0f;
+    accelerometer_R = Eigen::Matrix3f::Identity();
+    accelerometer_bias = Eigen::Vector3f::Zero();
 
     // Other:
     loop_rate_ms = 5;

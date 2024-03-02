@@ -1,5 +1,6 @@
 #pragma once
 
+#include <eigen3/Eigen/Dense>
 #include <cstdint>
 #include <memory>
 
@@ -18,12 +19,8 @@ public:
     uint16_t time_sync_port;
 
     bool accelerometer_calibration;
-    float accelerometer_bias_x;
-    float accelerometer_bias_y;
-    float accelerometer_bias_z;
-    float accelerometer_scalers_x;
-    float accelerometer_scalers_y;
-    float accelerometer_scalers_z;
+    Eigen::Matrix3f accelerometer_R;
+    Eigen::Vector3f accelerometer_bias;
 
     uint32_t loop_rate_ms;
 
