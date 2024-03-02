@@ -1,12 +1,28 @@
 #include "Accelerometer.h"
 #include <iostream>
+#include "../Utilities/Config/Config.h"
 
 Accelerometer::Accelerometer(TimeSynchronizer &time_synchronizer, bool skip_calibration)
     :   Sensor(time_synchronizer, "accel", "time,X,Y,Z,raw_X,raw_Y,raw_Z"),
-        initialized{skip_calibration},
-        bias{Eigen::Vector3f::Zero()},
-        scalers{Eigen::Vector3f::Ones()}
+        initialized{skip_calibration}
 {
+    auto config = Config::get_singleton();
+    bias = Eigen::Vector3f(config.accelerometer_bias_x, config.accelerometer_bias_y, config.accelerometer_bias_z);
+    scalers = Eigen::Vector3f(config.accelerometer_scalers_x, config.accelerometer_scalers_y, config.accelerometer_scalers_z);
+}
+
+Accelerometer::~Accelerometer() 
+{
+    if(initialized)
+    {
+        auto config = Config::get_singleton_mut();
+        config.accelerometer_bias_x = bias.x();
+        config.accelerometer_bias_y = bias.y();
+        config.accelerometer_bias_z = bias.z();
+        config.accelerometer_scalers_x = scalers.x();
+        config.accelerometer_scalers_y = scalers.y();
+        config.accelerometer_scalers_z = scalers.z();
+    }
 }
 
 void Accelerometer::consumeMessage(const Message &msg)

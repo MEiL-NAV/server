@@ -40,15 +40,10 @@ private:
         std::string log_dir_path;
         std::ofstream file;
     };
-
-    static std::string log_path;
-    static std::string run_counter_path;
-
     static int log_mask;
     static std::unique_ptr<FileAccessor> file_accessor;
 
     static std::unique_ptr<zmq::socket_t> logger_socket;
-    static constexpr const char* logger_address = "tcp://*:6666";
 
     const char* get_prefix();
     static void init_file();

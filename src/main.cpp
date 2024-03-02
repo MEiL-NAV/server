@@ -5,6 +5,7 @@
 #include "NaviSystem.hpp"
 #include "Utilities/Millis.h"
 #include "Utilities/Loggers/Logger.h"
+#include "Utilities/Config/Config.h"
 
 namespace
 {
@@ -15,10 +16,10 @@ int main()
 {
     zmq::context_t ctx;
     Logger::set_ctx(ctx);
-    Logger::set_mask(LogType::CALIBRATION | LogType::INFO | LogType::DEBUG | LogType::ERROR | LogType::SYNC);
     Logger logger(LogType::INFO);
     logger("Starting!");
     Millis::start();
+    auto config = Config::get_singleton();
     std::signal(SIGINT, 
         [](int sig) {
             if(sig == SIGINT)
@@ -27,8 +28,9 @@ int main()
             }
         }
     );
-    NaviSystem navi_sys{ctx};
+    NaviSystem navi_sys{ctx, config};
     shutting_down.acquire();
+    // std::cout << config.log_dir_path << std::endl;
     logger("Bye!");
     Logger::deconstruct();
     return 0;

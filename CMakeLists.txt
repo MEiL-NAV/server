@@ -30,6 +30,8 @@ find_package(cxxopts)
 target_link_libraries(server cxxopts::cxxopts)
 find_package(cppzmq)
 target_link_libraries(server cppzmq)
+find_package(yaml-cpp)
+target_link_libraries(server yaml-cpp)
 
 add_custom_command(TARGET server POST_BUILD 
                COMMAND ${CMAKE_COMMAND} -E copy_if_different

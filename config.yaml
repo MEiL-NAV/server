@@ -1,0 +1,21 @@
+# Logger config:
+log_mask: -1
+log_path: ../logs/
+run_counter_path: ../logs/run_counter
+logger_address: tcp://*:6666
+
+# Time sync:
+time_sync_period_ms: 5000
+time_sync_port: 50000
+
+# Sensors config:
+accelerometer_calibration: true
+accelerometer_bias_x: 0
+accelerometer_bias_y: 0
+accelerometer_bias_z: 0
+accelerometer_scalers_x: 1
+accelerometer_scalers_y: 1
+accelerometer_scalers_z: 1
+
+# Other:
+loop_rate_ms: 5

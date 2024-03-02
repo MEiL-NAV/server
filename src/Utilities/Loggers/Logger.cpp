@@ -1,11 +1,10 @@
 #include "Logger.h"
 #include <filesystem>
 #include <thread>
+#include "../Config/Config.h"
 
 int Logger::log_mask = -1;
 std::unique_ptr<Logger::FileAccessor> Logger::file_accessor = nullptr;
-std::string Logger::log_path = "../logs/";
-std::string Logger::run_counter_path = "../logs/run_counter";
 std::unique_ptr<zmq::socket_t> Logger::logger_socket = nullptr;
 
 void Logger::operator()(const std::string &msg)
@@ -32,8 +31,9 @@ void Logger::operator()(const std::string &msg)
 
 void Logger::set_ctx(zmq::context_t &ctx)
 {
+    auto config = Config::get_singleton();
     logger_socket = std::make_unique<zmq::socket_t>(ctx, zmq::socket_type::pub);
-    logger_socket->bind(logger_address);
+    logger_socket->bind(config.logger_address);
     logger_socket->send(zmq::message_t(), zmq::send_flags::none);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
@@ -85,25 +85,29 @@ void Logger::init_file()
         return;
     }
 
+    auto config = Config::get_singleton();
+
     int run_number = 1;
 
     std::error_code ec;
-    std::filesystem::create_directory(log_path, ec);
+    std::filesystem::create_directory(config.log_path, ec);
 
-    if (std::filesystem::exists(run_counter_path))
+    if (std::filesystem::exists(config.run_counter_path))
     {
-        std::ifstream ifs(run_counter_path);
+        std::ifstream ifs(config.run_counter_path);
         ifs >> run_number;
         ifs.close();
     }
-    std::ofstream ofs(run_counter_path, std::ofstream::trunc);
+    std::ofstream ofs(config.run_counter_path, std::ofstream::trunc);
     ofs << (run_number + 1);
     ofs.close();
 
-    std::filesystem::create_directory(log_path + std::to_string(run_number), ec);
+    std::filesystem::create_directory(config.log_path + std::to_string(run_number), ec);
 
     file_accessor = std::make_unique<FileAccessor>();
     std::scoped_lock lck(file_accessor->mtx);
-    file_accessor->log_dir_path = log_path + std::to_string(run_number) + "/";
+    file_accessor->log_dir_path = config.log_path + std::to_string(run_number) + "/";
     file_accessor->file.open((file_accessor->log_dir_path + "server.log").c_str(), std::ofstream::out | std::ofstream::trunc);
+
+    set_mask(config.log_mask);
 }

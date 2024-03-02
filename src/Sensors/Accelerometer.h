@@ -54,7 +54,7 @@ class Accelerometer : public Sensor<Eigen::Vector3f>
 {
 public:
     Accelerometer(TimeSynchronizer& time_synchronizer, bool skip_calibration = false);
-    virtual ~Accelerometer() {}
+    virtual ~Accelerometer();
 
     void consumeMessage(const Message& msg) override;
 

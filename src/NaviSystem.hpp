@@ -7,11 +7,12 @@
 #include "Utilities/PeriodicEvent.h"
 #include <zmq.hpp>
 #include "EKF/EKF_IMU.h"
+#include "Utilities/Config/Config.h"
 
 class NaviSystem : public PeriodicEvent
 {
 public:
-    NaviSystem(zmq::context_t& ctx);
+    NaviSystem(zmq::context_t& ctx, const Config& config);
     virtual ~NaviSystem();
 
 protected:

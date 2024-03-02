@@ -3,11 +3,12 @@
 #include <iostream>
 #include "Utilities/Converters.h"
 
-NaviSystem::NaviSystem(zmq::context_t& ctx)
-    :   PeriodicEvent(5, false),
+
+NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
+    :   PeriodicEvent(config.loop_rate_ms, false),
         udp_listener{1234},
-        time_synchronizer(5000,50000),
-        accelerometer(time_synchronizer,false),
+        time_synchronizer(config.time_sync_period_ms,config.time_sync_port),
+        accelerometer(time_synchronizer,!config.accelerometer_calibration),
         gyroscope(time_synchronizer,false),
         position_provider(time_synchronizer),
         ctx{ctx}
