@@ -2,12 +2,15 @@
 #include <iostream>
 #include <cassert>
 #include "Utilities/Millis.h"
-#include "Utilities/Loggers/Logger.h"
 
 TimeSynchronizer::TimeSynchronizer(uint32_t period_millis,
                                    std::string multicast_address, 
                                    uint16_t broadcast_port) 
-    : PeriodicEvent(period_millis), udp_multicaster(multicast_address, broadcast_port)
+    :   PeriodicEvent(period_millis),
+        udp_multicaster(multicast_address, broadcast_port),
+        last_sync_time{0, 0},
+        sync_id(0),
+        logger{LogType::SYNC}
 {
 
 }
@@ -24,8 +27,6 @@ std::optional<int32_t> TimeSynchronizer::get_offset(uint8_t node_id)
 
 void TimeSynchronizer::consumeMessage(const Message &msg) 
 {
-	static Logger logger(LogType::SYNC);
-
     assert(msg.command == Command::TIMESYNC);
     auto millis = Millis::get();
     uint32_t ping;
@@ -56,5 +57,6 @@ void TimeSynchronizer::periodic_event()
     message[0] = 'S';
     message[1] = sync_id;
     udp_multicaster.send(message);
+    logger("Sync message sent: " + std::to_string(sync_id));
     sync_id++;
 }

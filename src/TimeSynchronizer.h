@@ -4,6 +4,7 @@
 #include <mutex>
 #include "Utilities/PeriodicEvent.h"
 #include "Communication/UDPMulticaster.h"
+#include "Utilities/Loggers/Logger.h"
 #include "Protocol/Message.h"
 #include <optional>
 
@@ -26,4 +27,6 @@ private:
 
     std::map<uint8_t, int32_t> offset_table;
     std::mutex mtx;
+
+    Logger logger;
 };
