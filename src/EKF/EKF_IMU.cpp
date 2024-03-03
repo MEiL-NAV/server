@@ -12,7 +12,7 @@ EKF_IMU::EKF_IMU()
 }
 
 void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
-                     Eigen::Vector3f acc_reading) 
+                     Eigen::Vector3f acc_reading, std::optional<Eigen::Vector3f> pos_provider_reading) 
 {
     delta_time = (reading_time - last_update) / 1e3f;
     last_update = reading_time;
@@ -22,7 +22,17 @@ void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
         input.head<3>() = gyro_reading;
         input.tail<3>() = acc_reading;
         predict(input);
-        correct<3>(acc_reading);
+        if (pos_provider_reading.has_value())
+        {
+            Eigen::Vector<float, 6> acc_and_pos;
+            acc_and_pos.head<3>() = acc_reading;
+            acc_and_pos.tail<3>() = pos_provider_reading.value();
+            correct(acc_and_pos);
+        }
+        else
+        {
+            correct(acc_reading);
+        }
         state = apply_constraints(state,covariance);
     }
 }

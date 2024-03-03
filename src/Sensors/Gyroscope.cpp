@@ -32,6 +32,7 @@ void Gyroscope::consumeMessage(const Message &msg)
     auto delta_time = static_cast<float>(new_last_update - last_update)/1000.0f;
     value = filter->update(raw_value - bias, delta_time);
     last_update = new_last_update;
+    sem = true;
     log();
 }
 

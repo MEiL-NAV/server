@@ -1,7 +1,7 @@
 #include "PositionProvider.h"
 
 PositionProvider::PositionProvider(TimeSynchronizer &time_synchronizer)
-    :   Sensor(time_synchronizer, "pos_provider", "time,X,Y,Z")
+    :   Sensor(time_synchronizer, "pos_provider", "time,X,Y,Z,raw_X,raw_Y,raw_Z")
 {
 }
 
@@ -17,5 +17,6 @@ void PositionProvider::consumeMessage(const Message &msg)
     last_update =  payload.time + offset.value();
     raw_value = Eigen::Vector3f(payload.X, payload.Y, payload.Z);
     value = raw_value;
+    sem = true;
     log();
 }

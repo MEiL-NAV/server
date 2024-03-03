@@ -15,16 +15,10 @@ public:
     Sensor(TimeSynchronizer& time_synchronizer, std::string csv_filename, std::string csv_header = "") 
         :   time_synchronizer{time_synchronizer},
             last_update{0U},
+            sem{false},
             logger{csv_filename, csv_header}
     {}
 
-    Sensor(TimeSynchronizer& time_synchronizer) requires(std::is_same_v<T, Eigen::Vector3f>)
-        :   time_synchronizer{time_synchronizer},
-            last_update{0U},
-            raw_value{Eigen::Vector3f::Zero()},
-            value{Eigen::Vector3f::Zero()}
-    {}
-    
     virtual ~Sensor() {}
 
     virtual void consumeMessage([[maybe_unused]]const Message& msg) {};
@@ -35,15 +29,29 @@ public:
         return last_update > 0U && Millis::get() - last_update < timeout;
     }
 
-    std::pair<uint32_t,T> get_raw_value()
+    bool has_new_value()
     {
         std::scoped_lock lock(value_mutex);
+        return sem;
+    }
+
+    std::pair<uint32_t,T> get_raw_value(bool reset_sem = false)
+    {
+        std::scoped_lock lock(value_mutex);
+        if (reset_sem)
+        {
+            sem = false;
+        }
         return {last_update, raw_value};
     }
 
-    std::pair<uint32_t,T> get_value()
+    std::pair<uint32_t,T> get_value(bool reset_sem = false)
     {
         std::scoped_lock lock(value_mutex);
+        if (reset_sem)
+        {
+            sem = false;
+        }
         return {last_update, value};
     }
 
@@ -63,6 +71,7 @@ protected:
     uint32_t last_update;
     T raw_value;
     T value;
+    bool sem;
     std::mutex value_mutex;
     LoggerCSV logger;
 };

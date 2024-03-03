@@ -29,13 +29,23 @@ NaviSystem::~NaviSystem()
 void NaviSystem::periodic_event() 
 {
     static uint8_t counter = 1;
-    if(accelerometer.healthy() && gyroscope.healthy())
+    if(accelerometer.has_new_value() && gyroscope.has_new_value())
     {
-        auto accelerometer_reading = accelerometer.get_value();
-        auto gyroscope_reading = gyroscope.get_value();
+        auto accelerometer_reading = accelerometer.get_value(true);
+        auto gyroscope_reading = gyroscope.get_value(true);
         auto time = (accelerometer_reading.first + gyroscope_reading.first) / 2.0f;
-        ekf.update(time, Converters::mdeg_to_radians(gyroscope_reading.second), accelerometer_reading.second);
-        if(counter++ % 10 == 0)
+        if(position_provider.has_new_value())
+        {
+            ekf.update(time,
+                       Converters::mdeg_to_radians(gyroscope_reading.second),
+                       accelerometer_reading.second,
+                       position_provider.get_value(true).second);
+        }
+        else
+        {
+            ekf.update(time, Converters::mdeg_to_radians(gyroscope_reading.second), accelerometer_reading.second);
+        }
+        if(counter++ % 5 == 0)
         {
             send_status();
         }
@@ -61,7 +71,6 @@ void NaviSystem::messageHandler(const Message &msg)
         default:
             return;
     }
-
 }
 
 void NaviSystem::send_status() 

@@ -2,6 +2,7 @@
 #include "EKFConstraints.h"
 #include "ConstraintsLoader.h"
 #include "Math.h"
+#include <optional>
 
 
 //State: x, y, z, vx, vy, vz, q0, qx, qy, qz, gyro_bias_x, gyro_bias_y, gyro_bias_z 
@@ -11,7 +12,10 @@ public:
     EKF_IMU();
     virtual ~EKF_IMU() {}
 
-    void update(uint32_t reading_time, Eigen::Vector3f gyro_reading, Eigen::Vector3f acc_reading);
+    void update(uint32_t reading_time,
+                Eigen::Vector3f gyro_reading,
+                Eigen::Vector3f acc_reading,
+                std::optional<Eigen::Vector3f> pos_provider_reading = std::nullopt);
 
     Eigen::Vector<float, 13> get_state() { return EKF::get_state(); }
     Eigen::Vector3f get_position() { return state.head<3>(); }
