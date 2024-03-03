@@ -61,7 +61,6 @@ Config::~Config()
         out << YAML::Key << "sensor_multicast_address" << YAML::Value << sensor_multicast_address;
         out << YAML::Key << "sensor_multicast_port" << YAML::Value << sensor_multicast_port;
         out << YAML::Key << "accelerometer_calibration" << YAML::Value << accelerometer_calibration;
-        out << YAML::Key << "accelerometer_calibration" << YAML::Value << accelerometer_calibration;
         out << YAML::Key << "accelerometer_R" << YAML::Value << YAML::convert<Eigen::Matrix3f>::encode(accelerometer_R);
         out << YAML::Key << "accelerometer_bias" << YAML::Value << YAML::convert<Eigen::Vector3f>::encode(accelerometer_bias);
         

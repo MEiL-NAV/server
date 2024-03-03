@@ -7,6 +7,8 @@ Accelerometer::Accelerometer(TimeSynchronizer &time_synchronizer, bool skip_cali
         initialized{skip_calibration}
 {
     auto config = Config::get_singleton();
+    coefficients.R = config.accelerometer_R;
+    coefficients.b = config.accelerometer_bias;
 }
 
 Accelerometer::~Accelerometer() 
