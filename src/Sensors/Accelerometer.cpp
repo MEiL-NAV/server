@@ -34,6 +34,7 @@ void Accelerometer::consumeMessage(const Message &msg)
     {
         return;
     }
+    std::scoped_lock lock(value_mutex);
     last_update =  payload.time + offset.value();
     raw_value = Eigen::Vector3f(payload.X, payload.Y, payload.Z);
     value = coefficients.R * raw_value + coefficients.b;

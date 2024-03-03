@@ -27,6 +27,7 @@ void Gyroscope::consumeMessage(const Message &msg)
         return;
     }
     auto new_last_update = payload.time + offset.value();
+    std::scoped_lock lock(value_mutex);
     raw_value = Eigen::Vector3f(payload.X, payload.Y, payload.Z);
     auto delta_time = static_cast<float>(new_last_update - last_update)/1000.0f;
     value = filter->update(raw_value - bias, delta_time);

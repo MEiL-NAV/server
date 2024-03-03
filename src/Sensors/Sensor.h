@@ -6,6 +6,7 @@
 #include <iostream>
 #include <eigen3/Eigen/Dense>
 #include "../Utilities/Loggers/LoggerCSV.h"
+#include <mutex>
 
 template <typename T>
 class Sensor
@@ -30,16 +31,19 @@ public:
 
     bool healthy()
     {
+        std::scoped_lock lock(value_mutex);
         return last_update > 0U && Millis::get() - last_update < timeout;
     }
 
     std::pair<uint32_t,T> get_raw_value()
     {
+        std::scoped_lock lock(value_mutex);
         return {last_update, raw_value};
     }
 
     std::pair<uint32_t,T> get_value()
     {
+        std::scoped_lock lock(value_mutex);
         return {last_update, value};
     }
 
@@ -57,8 +61,8 @@ public:
 protected:
     TimeSynchronizer& time_synchronizer;
     uint32_t last_update;
-
     T raw_value;
     T value;
+    std::mutex value_mutex;
     LoggerCSV logger;
 };
