@@ -1,5 +1,6 @@
 #include "EKF_IMU.h"
 #include <iostream>
+#include "../Utilities/Loggers/Logger.h"
 
 
 EKF_IMU::EKF_IMU()
@@ -8,7 +9,7 @@ EKF_IMU::EKF_IMU()
         delta_time{0.0f},
         g{0.0f,0.0f,9.805f}
 {
-    state(3+3) = 1.0f; // init quaterion as 1,0,0,0
+    reset();
 }
 
 void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
@@ -34,6 +35,11 @@ void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
             correct(acc_reading);
         }
         state = apply_constraints(state,covariance);
+    }
+    if (state.hasNaN())
+    {
+        reset();
+        Logger(LogType::ERROR)("EKF IMU reseted due to NaN state");
     }
 }
 
@@ -105,7 +111,14 @@ Eigen::MatrixXf EKF_IMU::constraints_derivative(const Eigen::Vector<float, 13> &
     return Eigen::MatrixXf::Identity(1,13);
 }
 
-void EKF_IMU::set_position_process_noise(float position_process_noise) 
+void EKF_IMU::reset()
+{
+    state.setZero();
+    state(3+3) = 1.0f; // init quaterion as 1,0,0,0
+    covariance = process_noise_covariance;
+}
+
+void EKF_IMU::set_position_process_noise(float position_process_noise)
 {
     process_noise_covariance.block<3,3>(0,0) = Eigen::Matrix<float,3,3>::Identity() * position_process_noise;
     covariance = process_noise_covariance;

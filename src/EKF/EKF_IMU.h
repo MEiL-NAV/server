@@ -23,6 +23,8 @@ public:
     Eigen::Vector4f get_quaterion() { return state.segment<4>(6); }
     Eigen::Vector3f get_rpy() { return quaterion_to_rpy(get_quaterion()); }
 
+    void reset();
+
     // EKF parameters
     void set_position_process_noise(float position_process_noise);
     void set_velocity_process_noise(float velocity_process_noise);
