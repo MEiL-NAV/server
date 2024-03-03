@@ -26,6 +26,14 @@ public:
     Eigen::Matrix3f accelerometer_R;
     Eigen::Vector3f accelerometer_bias;
 
+    float position_process_noise;
+    float velocity_process_noise;
+    float quaterion_process_noise;
+    float gyro_bias_process_noise;
+    float accel_measurement_noise;
+    float pos_provider_measurement_noise;
+    float constraint_correction_scaler;
+
     uint32_t loop_rate_ms;
 
     static const Config& get_singleton();

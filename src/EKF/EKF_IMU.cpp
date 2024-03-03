@@ -3,16 +3,12 @@
 
 
 EKF_IMU::EKF_IMU()
-    :   EKFConstraints(1e-6f * Eigen::Matrix<float, 13, 13>::Identity(),
-                       1e-10f *Eigen::Matrix<float, 3, 3>::Identity()),
+    :   EKFConstraints(),
         last_update{0},
         delta_time{0.0f},
         g{0.0f,0.0f,9.805f}
 {
     state(3+3) = 1.0f; // init quaterion as 1,0,0,0
-
-    // TODO: calibrate
-    constraint_correction_scaler = 5e-2f;
 }
 
 void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
@@ -26,7 +22,7 @@ void EKF_IMU::update(uint32_t reading_time, Eigen::Vector3f gyro_reading,
         input.head<3>() = gyro_reading;
         input.tail<3>() = acc_reading;
         predict(input);
-        correct(acc_reading);
+        correct<3>(acc_reading);
         state = apply_constraints(state,covariance);
     }
 }
@@ -56,26 +52,28 @@ Eigen::Matrix<float, 13, 13> EKF_IMU::state_function_derivative(Eigen::Vector<fl
     return A;
 }
 
-Eigen::Vector<float, 3> EKF_IMU::measurement_function(Eigen::Vector<float, 13> &state)
+Eigen::Vector<float, 6> EKF_IMU::measurement_function(Eigen::Vector<float, 13> &state)
 {
-    Eigen::Vector3f h;
+    Eigen::Vector<float,6> h;
 
     float& q0 = state(6);
     float& qx = state(7);
     float& qy = state(8);
     float& qz = state(9);
 
-    h(0) = 2 * q0 * qy + 2 * qx * qz;
-    h(1) = 2 * qy * qz - 2 * q0 * qx;
-    h(2) = q0 * q0 - qx * qx - qy * qy + qz * qz;
-    return g.z() * h;
+    h(0) = (2 * q0 * qy + 2 * qx * qz) * g.z();
+    h(1) = (2 * qy * qz - 2 * q0 * qx) * g.z();
+    h(2) = (q0 * q0 - qx * qx - qy * qy + qz * qz) * g.z();
+    h.tail<3>() = state.head<3>();
+    return h;
 }
 
-Eigen::Matrix<float, 3, 13> EKF_IMU::measurement_function_derivative(Eigen::Vector<float, 13> &state)
+Eigen::Matrix<float, 6, 13> EKF_IMU::measurement_function_derivative(Eigen::Vector<float, 13> &state)
 {
-    Eigen::Matrix<float, 3, 13> H = Eigen::Matrix<float, 3, 13>::Zero();
+    Eigen::Matrix<float, 6, 13> H = Eigen::Matrix<float, 6, 13>::Zero();
     Eigen::Vector<float, 4> quaterion = state.segment<4>(6);
     H.block<3, 4>(0, 6) = g.z() * Ca(quaterion);
+    H.block<3, 3>(3, 0) = Eigen::Matrix<float, 3, 3>::Identity();
     return H;
 }
 
@@ -95,4 +93,45 @@ Eigen::MatrixXf EKF_IMU::constraints_derivative(const Eigen::Vector<float, 13> &
         return constraints_loader.constraints_derivative(state);
     }
     return Eigen::MatrixXf::Identity(1,13);
+}
+
+void EKF_IMU::set_position_process_noise(float position_process_noise) 
+{
+    process_noise_covariance.block<3,3>(0,0) = Eigen::Matrix<float,3,3>::Identity() * position_process_noise;
+    covariance = process_noise_covariance;
+}
+
+void EKF_IMU::set_velocity_process_noise(float velocity_process_noise) 
+{
+    process_noise_covariance.block<3,3>(3,3) = Eigen::Matrix<float,3,3>::Identity() * velocity_process_noise;
+    covariance = process_noise_covariance;
+}
+
+void EKF_IMU::set_quaterion_process_noise(float quaterion_process_noise) 
+{
+    process_noise_covariance.block<4,4>(6,6) = Eigen::Matrix<float,4,4>::Identity() * quaterion_process_noise;
+    covariance = process_noise_covariance;
+}
+
+void EKF_IMU::set_gyro_bias_process_noise(float gyro_bias_process_noise) 
+{
+    process_noise_covariance.block<3,3>(10,10) = Eigen::Matrix<float,3,3>::Identity() * gyro_bias_process_noise;
+    covariance = process_noise_covariance;
+}
+
+void EKF_IMU::set_accel_measurement_noise(float accel_measurement_noise) 
+{
+    measurement_noise_covariance.block<3,3>(0,0) = Eigen::Matrix<float,3,3>::Identity() * accel_measurement_noise;
+}
+
+void EKF_IMU::set_pos_provider_measurement_noise(
+    float pos_provider_measurement_noise) 
+{
+    measurement_noise_covariance.block<3,3>(3,3) = Eigen::Matrix<float,3,3>::Identity() * pos_provider_measurement_noise;
+}
+
+void EKF_IMU::set_constraint_correction_scaler(
+    float constraint_correction_scaler) 
+{
+    this->constraint_correction_scaler = constraint_correction_scaler;
 }

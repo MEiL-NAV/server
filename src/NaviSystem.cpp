@@ -99,3 +99,15 @@ void NaviSystem::send_status()
     status_sock.send(message,zmq::send_flags::none);
 
 }
+
+void NaviSystem::set_EKF_parameters() 
+{
+    auto config = Config::get_singleton();
+    ekf.set_position_process_noise(config.position_process_noise);
+    ekf.set_velocity_process_noise(config.velocity_process_noise);
+    ekf.set_quaterion_process_noise(config.quaterion_process_noise);
+    ekf.set_gyro_bias_process_noise(config.gyro_bias_process_noise);
+    ekf.set_accel_measurement_noise(config.accel_measurement_noise);
+    ekf.set_pos_provider_measurement_noise(config.pos_provider_measurement_noise);
+    ekf.set_constraint_correction_scaler(config.constraint_correction_scaler);
+}

@@ -27,6 +27,14 @@ Config::Config(const char *config_file_path)
         accelerometer_R = config["accelerometer_R"].as<Eigen::Matrix3f>();
         accelerometer_bias = config["accelerometer_bias"].as<Eigen::Vector3f>();
 
+        position_process_noise = config["position_process_noise"].as<float>();
+        velocity_process_noise = config["velocity_process_noise"].as<float>();
+        quaterion_process_noise = config["quaterion_process_noise"].as<float>();
+        gyro_bias_process_noise = config["gyro_bias_process_noise"].as<float>();
+        accel_measurement_noise = config["accel_measurement_noise"].as<float>();
+        pos_provider_measurement_noise = config["pos_provider_measurement_noise"].as<float>();
+        constraint_correction_scaler = config["constraint_correction_scaler"].as<float>();
+
         loop_rate_ms = config["loop_rate_ms"].as<uint32_t>();
     }
     catch(const std::exception& e)
@@ -63,6 +71,16 @@ Config::~Config()
         out << YAML::Key << "accelerometer_calibration" << YAML::Value << accelerometer_calibration;
         out << YAML::Key << "accelerometer_R" << YAML::Value << YAML::convert<Eigen::Matrix3f>::encode(accelerometer_R);
         out << YAML::Key << "accelerometer_bias" << YAML::Value << YAML::convert<Eigen::Vector3f>::encode(accelerometer_bias);
+
+        out << YAML::Newline << YAML::Newline;
+        out << YAML::Comment("EKF parameters:");
+        out << YAML::Key << "position_process_noise" << YAML::Value << position_process_noise;
+        out << YAML::Key << "velocity_process_noise" << YAML::Value << velocity_process_noise;
+        out << YAML::Key << "quaterion_process_noise" << YAML::Value << quaterion_process_noise;
+        out << YAML::Key << "gyro_bias_process_noise" << YAML::Value << gyro_bias_process_noise;
+        out << YAML::Key << "accel_measurement_noise" << YAML::Value << accel_measurement_noise;
+        out << YAML::Key << "pos_provider_measurement_noise" << YAML::Value << pos_provider_measurement_noise;
+        out << YAML::Key << "constraint_correction_scaler" << YAML::Value << constraint_correction_scaler;
         
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Other:");
@@ -112,6 +130,15 @@ void Config::restore_defaults()
     accelerometer_calibration = true;
     accelerometer_R = Eigen::Matrix3f::Identity();
     accelerometer_bias = Eigen::Vector3f::Zero();
+
+    // EKF parameters:
+    position_process_noise = 0.01;
+    velocity_process_noise = 0.01;
+    quaterion_process_noise = 0.01;
+    gyro_bias_process_noise = 0.01;
+    accel_measurement_noise = 0.01;
+    pos_provider_measurement_noise = 0.01;
+    constraint_correction_scaler = 0.01;
 
     // Other:
     loop_rate_ms = 5;

@@ -35,4 +35,5 @@ private:
 
     void messageHandler(const Message& msg);
     void send_status();
+    void set_EKF_parameters();
 };

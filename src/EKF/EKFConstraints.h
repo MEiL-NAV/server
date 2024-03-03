@@ -5,11 +5,7 @@ template<int state_size, int input_size, int measurement_size>
 class EKFConstraints : public EKF<state_size, input_size, measurement_size>
 {
 public:
-    EKFConstraints(
-        Eigen::Matrix<float,state_size,state_size> process_noise_covariance,
-        Eigen::Matrix<float,measurement_size,measurement_size> measurement_noise_covariance
-    );
-
+    EKFConstraints() = default;
     virtual ~EKFConstraints() {}
 
     Eigen::Vector<float, state_size> apply_constraints(Eigen::Vector<float, state_size> state, Eigen::Matrix<float, state_size, state_size> covariance);
@@ -23,12 +19,6 @@ protected:
     virtual Eigen::MatrixXf
     constraints_derivative(const Eigen::Vector<float, state_size> &state) = 0;
 };
-
-template <int state_size, int input_size, int measurement_size>
-inline EKFConstraints<state_size, input_size, measurement_size>::EKFConstraints(Eigen::Matrix<float, state_size, state_size> process_noise_covariance, Eigen::Matrix<float, measurement_size, measurement_size> measurement_noise_covariance)
-    : EKF<state_size, input_size, measurement_size>(process_noise_covariance, measurement_noise_covariance)
-{
-}
 
 template <int state_size, int input_size, int measurement_size>
 inline Eigen::Vector<float, state_size> EKFConstraints<state_size, input_size, measurement_size>::apply_constraints(
