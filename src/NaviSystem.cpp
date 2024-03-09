@@ -6,8 +6,8 @@
 
 NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
     :   PeriodicEvent(config.loop_rate_ms, false),
-        udp_listener{config.sensor_multicast_address, config.sensor_multicast_port},
-        time_synchronizer(config.time_sync_period_ms, config.time_sync_address, config.time_sync_port),
+        udp_listener{config.sensor_multicast_address, config.sensor_multicast_port, config.sensor_multicast_interface},
+        time_synchronizer(config.time_sync_period_ms, config.time_sync_address, config.time_sync_port, config.sensor_multicast_interface),
         accelerometer(time_synchronizer,!config.accelerometer_calibration),
         gyroscope(time_synchronizer,false),
         position_provider(time_synchronizer),

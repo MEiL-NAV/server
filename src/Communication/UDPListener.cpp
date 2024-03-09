@@ -7,8 +7,8 @@
 
 #include "../Protocol/MessageDecoder.h"
 
-UDPListener::UDPListener(std::string multicast_address, uint16_t port) 
-    : multicast_address{multicast_address}, port(port), sockfd(-1), is_listening(true) {
+UDPListener::UDPListener(std::string multicast_address, uint16_t port, std::string local_interface) 
+    : multicast_address{multicast_address}, port(port), local_interface{local_interface}, sockfd(-1), is_listening(true) {
     initialize_socket();
     start_listening_thread();
 }
@@ -62,7 +62,14 @@ void UDPListener::initialize_socket() {
     // Join the multicast group
     struct ip_mreq mreq;
     mreq.imr_multiaddr.s_addr = inet_addr(multicast_address.c_str());
-    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    if  (local_interface.empty())
+    {
+        mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    }
+    else
+    {
+        mreq.imr_interface.s_addr = inet_addr(local_interface.c_str());
+    }
     if (setsockopt(sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq)) < 0) {
         perror("Joining multicast group failed");
         close(sockfd);

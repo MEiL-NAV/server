@@ -5,9 +5,10 @@
 
 TimeSynchronizer::TimeSynchronizer(uint32_t period_millis,
                                    std::string multicast_address, 
-                                   uint16_t broadcast_port) 
+                                   uint16_t broadcast_port,
+                                   std::string interface) 
     :   PeriodicEvent(period_millis),
-        udp_multicaster(multicast_address, broadcast_port),
+        udp_multicaster(multicast_address, broadcast_port, interface),
         last_sync_time{0, 0},
         sync_id(0),
         logger{LogType::SYNC}

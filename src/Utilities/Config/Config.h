@@ -17,6 +17,7 @@ public:
 
     std::string sensor_multicast_address;
     uint16_t sensor_multicast_port;
+    std::string sensor_multicast_interface;
 
     uint32_t time_sync_period_ms;
     std::string time_sync_address;

@@ -11,7 +11,8 @@
 class TimeSynchronizer : public PeriodicEvent
 {
 public:
-    TimeSynchronizer(uint32_t period_millis, std::string multicast_address, uint16_t broadcast_port = 50000U);
+    TimeSynchronizer(uint32_t period_millis, std::string multicast_address,
+        uint16_t broadcast_port = 50000U,std::string interface = "");
     virtual ~TimeSynchronizer() {}
 
     std::optional<int32_t> get_offset(uint8_t node_id);

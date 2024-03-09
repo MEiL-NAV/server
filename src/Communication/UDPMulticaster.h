@@ -8,7 +8,7 @@
 
 class UDPMulticaster {
 public:
-    UDPMulticaster(std::string multicast_address, uint16_t multicast_port);
+    UDPMulticaster(std::string multicast_address, uint16_t multicast_port, std::string local_interface = "");
     ~UDPMulticaster();
 
     void send(std::string message);
@@ -21,6 +21,7 @@ private:
     int socket_fd;
     std::string multicast_address;
     uint16_t port;
+    std::string local_interface;
     struct sockaddr_in multicast_group;
     int ttl;
 

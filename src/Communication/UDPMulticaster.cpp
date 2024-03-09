@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-UDPMulticaster::UDPMulticaster(std::string multicast_address, uint16_t multicast_port) 
-    : multicast_address{multicast_address}, port(multicast_port), ttl{3}
+UDPMulticaster::UDPMulticaster(std::string multicast_address, uint16_t multicast_port, std::string local_interface) 
+    : multicast_address{multicast_address}, port(multicast_port), local_interface{local_interface}, ttl{3}
 {
     initializeSocket();
 }
@@ -26,6 +26,17 @@ void UDPMulticaster::initializeSocket()
         perror("setsockopt(IP_MULTICAST_TTL) failed");
         close(socket_fd);
         exit(EXIT_FAILURE);
+    }
+
+    // Set the interface for outgoing multicast packets
+    if (!local_interface.empty()) {
+        struct in_addr local_interface_addr;
+        local_interface_addr.s_addr = inet_addr(local_interface.c_str());
+        if (setsockopt(socket_fd, IPPROTO_IP, IP_MULTICAST_IF, (void *)&local_interface_addr, sizeof(local_interface_addr)) < 0) {
+            perror("setsockopt(IP_MULTICAST_IF) failed");
+            close(socket_fd);
+            exit(EXIT_FAILURE);
+        }
     }
 
     // Address information
