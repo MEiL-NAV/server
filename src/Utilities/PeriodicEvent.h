@@ -12,6 +12,7 @@ public:
 
 protected:
     void start_periodic_task();
+    void stop_periodic_task();
     virtual void periodic_event() {};
 
 private:

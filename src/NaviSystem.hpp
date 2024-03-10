@@ -3,6 +3,7 @@
 #include "TimeSynchronizer.h"
 #include "Sensors/Accelerometer.h"
 #include "Sensors/Gyroscope.h"
+#include "Sensors/FanucPosition.h"
 #include "Sensors/PositionProvider.h"
 #include "Utilities/PeriodicEvent.h"
 #include <zmq.hpp>
@@ -27,6 +28,7 @@ private:
     Accelerometer accelerometer;
     Gyroscope gyroscope;
     PositionProvider position_provider;
+    FanucPosition fanuc_position;
 
     // ZMQ
     zmq::context_t& ctx;

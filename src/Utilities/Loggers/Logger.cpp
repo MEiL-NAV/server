@@ -73,6 +73,8 @@ const char *Logger::get_prefix()
         return "[ERROR] ";
     case LogType::SYNC:
         return "[SYNC] ";
+    case LogType::FANUC:
+        return "[FANUC] ";
     default:
         return "";
     }

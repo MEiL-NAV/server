@@ -2,7 +2,6 @@
 #include "../TimeSynchronizer.h"
 #include <eigen3/Eigen/Dense>
 #include <memory>
-#include "../Utilities/Filters/Filter.h"
 #include "../Utilities/Loggers/LoggerCSV.h"
 
 class PositionProvider : public Sensor<Eigen::Vector3f>

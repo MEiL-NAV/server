@@ -12,18 +12,24 @@ PeriodicEvent::PeriodicEvent(uint32_t period_millis, bool self_start)
 
 PeriodicEvent::~PeriodicEvent() 
 {
-    should_exit.store(true);
-    cv.notify_all();
-    if (sender_thread.joinable()) {
-        sender_thread.join();
-    }
+    stop_periodic_task();
 }
 
 void PeriodicEvent::start_periodic_task() 
 {
+    should_exit.store(false);
     if(!sender_thread.joinable())
     {
         sender_thread = std::thread(&PeriodicEvent::event, this);
+    }
+}
+
+void PeriodicEvent::stop_periodic_task() 
+{
+    should_exit.store(true);
+    cv.notify_all();
+    if (sender_thread.joinable()) {
+        sender_thread.join();
     }
 }
 

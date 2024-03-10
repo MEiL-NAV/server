@@ -13,6 +13,7 @@ enum LogType : int
     ERROR         = 1 << 2,
     CALIBRATION   = 1 << 3,
     SYNC          = 1 << 4,
+    FANUC         = 1 << 5,
 };
 
 class Logger

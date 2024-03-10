@@ -52,4 +52,5 @@ Payload MessageDecoder::parsePayload(Command command, uint8_t *buffer,
             return parse<VectorPacket>(buffer,buffer_size);
         break;
     }
+    throw std::runtime_error("Unknown command");
 }
