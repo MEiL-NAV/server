@@ -9,6 +9,7 @@
 #include <zmq.hpp>
 #include "EKF/EKF_IMU.h"
 #include "Utilities/Config/Config.h"
+#include "ForceLogger.h"
 
 class NaviSystem : public PeriodicEvent
 {
@@ -29,6 +30,7 @@ private:
     Gyroscope gyroscope;
     PositionProvider position_provider;
     FanucPosition fanuc_position;
+    ForceLogger force_logger;
 
     // ZMQ
     zmq::context_t& ctx;

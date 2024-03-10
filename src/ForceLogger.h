@@ -10,13 +10,13 @@ struct ForceSource
     uint16_t modbus_register;
 };
 
-class ForceLogger : PeriodicEvent
+class ForceLogger : protected PeriodicEvent
 {
 public:
     ForceLogger();
+    Eigen::VectorXf get_forces();
 
 protected:
-    Eigen::VectorXf get_forces();
     void periodic_event() override;
 
 private:

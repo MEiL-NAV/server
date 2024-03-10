@@ -7,7 +7,7 @@
 #include <boost/asio.hpp>
 #include <optional>
 
-class FanucPosition : public Sensor<Eigen::Vector3f>, public PeriodicEvent
+class FanucPosition : public Sensor<Eigen::Vector3f>, protected PeriodicEvent
 {
 public:
     FanucPosition(TimeSynchronizer& time_synchronizer);

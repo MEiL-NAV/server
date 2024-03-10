@@ -3,10 +3,10 @@
 
 
 ForceLogger::ForceLogger()
-    :   PeriodicEvent(20),
-        logger("force.csv", "time, forces...")
+    :   PeriodicEvent(100),
+        logger("force", "time, forces...")
 {
-
+    forces.setZero(0);
 }
 
 Eigen::VectorXf ForceLogger::get_forces()
@@ -18,13 +18,12 @@ Eigen::VectorXf ForceLogger::get_forces()
 void ForceLogger::periodic_event()
 {
     std::scoped_lock<std::mutex> lock(force_mtx);
-
+    forces.resize(1 + sources.size());
+    forces(0) = Millis::get();
     for(auto& source : sources)
     {
         // Read force from source
     }
 
-    Eigen::VectorXf log;
-    log << Millis::get(), forces;
-    logger << log;
+    logger << forces;
 }
