@@ -25,6 +25,7 @@ NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
 
 NaviSystem::~NaviSystem() 
 {
+    udp_listener.stop_listening_thread();
     status_sock.close();
 }
 

@@ -9,12 +9,13 @@ public:
     UDPListener(std::string multicast_address, uint16_t port, std::string local_interface = "");
     ~UDPListener();
 
+    void stop_listening_thread();
+
     void set_message_event(std::function<void(const Message&)> func);
 
 private:
     void initialize_socket();
     void start_listening_thread();
-    void stop_listening_thread();
     void receive();
 
 private:

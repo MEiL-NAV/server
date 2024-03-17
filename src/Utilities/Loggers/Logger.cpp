@@ -48,6 +48,7 @@ void Logger::deconstruct()
     if(logger_socket != nullptr)
     {
         logger_socket->close();
+        logger_socket = nullptr;
     }
     file_accessor->file.close();
 }

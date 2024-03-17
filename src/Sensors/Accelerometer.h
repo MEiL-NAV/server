@@ -70,6 +70,7 @@ public:
 
 private:
     bool initialized;
+    bool was_calibrated;
 
     AccelerometerCalibrationCoefficients coefficients;
 

@@ -9,6 +9,7 @@ class Config
 public:
     Config(const char* config_file_path);
     ~Config();
+    void save();
 
     int log_mask;
     std::string log_path;

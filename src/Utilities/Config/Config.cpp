@@ -6,7 +6,7 @@
 
 std::unique_ptr<Config> Config::singleton = nullptr;
 
-Config::Config(const char *config_file_path) 
+Config::Config(const char *config_file_path)
 {
     try
     {
@@ -47,9 +47,13 @@ Config::Config(const char *config_file_path)
 
 Config::~Config() 
 {
+    
+}
+
+void Config::save() 
+{
     try
     {
-        std::ofstream fout(config_file_path, std::ios::out | std::ios::trunc);
         YAML::Emitter out;
         out << YAML::BeginMap;
 
@@ -89,7 +93,10 @@ Config::~Config()
         out << YAML::Comment("Other:");
         out << YAML::Key << "loop_rate_ms" << YAML::Value << loop_rate_ms;
         out << YAML::EndMap;
+        std::ofstream fout(config_file_path, std::ios::out | std::ios::trunc);
         fout << out.c_str();
+        fout.close();
+        Logger(LogType::INFO)("Config saved!");
     }
     catch(const std::exception& e)
     {
@@ -146,4 +153,6 @@ void Config::restore_defaults()
 
     // Other:
     loop_rate_ms = 5;
+
+    save();
 }

@@ -4,7 +4,7 @@
 
 Accelerometer::Accelerometer(TimeSynchronizer &time_synchronizer, bool skip_calibration)
     :   Sensor(time_synchronizer, "accel", "time,X,Y,Z,raw_X,raw_Y,raw_Z"),
-        initialized{skip_calibration}
+        initialized{skip_calibration}, was_calibrated{false}
 {
     auto config = Config::get_singleton();
     coefficients.R = config.accelerometer_R;
@@ -13,11 +13,13 @@ Accelerometer::Accelerometer(TimeSynchronizer &time_synchronizer, bool skip_cali
 
 Accelerometer::~Accelerometer() 
 {
-    if(initialized)
+    if(was_calibrated)
     {
+        Logger(LogType::CALIBRATION)("Saving accelerometer calibration coefficients!");
         auto config = Config::get_singleton_mut();
         config.accelerometer_R = coefficients.R;
         config.accelerometer_bias = coefficients.b;
+        config.save();
     }
 }
 
@@ -57,6 +59,7 @@ void Accelerometer::calibrate(Eigen::Vector3f sample)
         << coefficients.b.format(commaFormat);
 
     Logger(LogType::CALIBRATION)(ss.str());
+    was_calibrated = true;
     initialized = true;
 }
 
@@ -172,10 +175,18 @@ void AccelerometerCalibration::save_mean(Eigen::Vector3f mean)
     auto signs = calc_sign(mean);
     auto side = calc_side(signs);
 
+    if (side == side::INVALID_SIDE)
+    {
+        Eigen::IOFormat commaFormat(3, Eigen::DontAlignCols," ",",");
+        std::stringstream ss;
+        ss.precision(3);
+        ss << "Accelerometer mean: " << mean.format(commaFormat);
+        logger(ss.str());
+        return;
+    }
+
     switch(side)
     {
-        case side::INVALID_SIDE:
-            return;
         case side::FRONT:
             readings.col(0) = mean;
             expected.col(0) = Eigen::Vector3f(G,0.0f, 0.0f);
@@ -205,6 +216,8 @@ void AccelerometerCalibration::save_mean(Eigen::Vector3f mean)
             readings.col(5) = mean;
             expected.col(5) = Eigen::Vector3f(0.0f, 0.0f, -G);
             logger("Detected BUTTOM side");
+            break;
+        default:
             break;
     }
 

@@ -87,6 +87,10 @@ void UDPListener::start_listening_thread() {
 }
 
 void UDPListener::stop_listening_thread() {
+    if(!is_listening)
+    {
+        return;
+    }
     is_listening = false;
     if (listen_thread.joinable()) {
         listen_thread.join();
