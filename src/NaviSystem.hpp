@@ -9,6 +9,7 @@
 #include <zmq.hpp>
 #include "EKF/EKF_IMU.h"
 #include "Utilities/Config/Config.h"
+#include "Utilities/Loggers/LoggerCSV.h"
 
 class NaviSystem : public PeriodicEvent
 {
@@ -23,6 +24,7 @@ private:
     UDPListener udp_listener;
     TimeSynchronizer time_synchronizer;
     EKF_IMU ekf;
+    LoggerCSV ekf_logger;
 
     // Sensors
     Accelerometer accelerometer;

@@ -1,7 +1,7 @@
 #pragma once
 #include <dlfcn.h>
 #include <eigen3/Eigen/Dense>
-#include <iostream>
+#include "../Utilities/Loggers/Logger.h"
 
 class ConstraintsLoader 
 {
@@ -9,10 +9,11 @@ public:
     ConstraintsLoader()
         : lib(NULL), valid(false) 
     {
+        Logger logger(LogType::ERROR);
         lib = dlopen("./libconstraints.so", RTLD_NOW);
         if (!lib) 
         {
-            std::cerr << "Failed to open library: " << dlerror() << std::endl;
+            logger(std::string("Failed to open library: ") + dlerror());
             constraints_fun = NULL;
             constraints_derivative_fun = NULL;
         } 
@@ -27,7 +28,7 @@ public:
 
         if (!constraints_fun || !constraints_derivative_fun) 
         {
-            std::cerr << "Failed to load functions: using default"  << std::endl;
+            logger("Failed to load functions: using default");
             constraints_fun = NULL;
             constraints_derivative_fun = NULL;
         }

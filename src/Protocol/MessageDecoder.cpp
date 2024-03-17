@@ -1,7 +1,7 @@
 #include "MessageDecoder.h"
 #include <iostream>
 #include <cstring>
-
+#include "../Utilities/Loggers/Logger.h"
 MessageDecoder::MessageDecoder() 
 {
 }
@@ -11,7 +11,7 @@ std::unique_ptr<Message> MessageDecoder::decode(uint8_t *buffer,
   uint16_t crc = (buffer[buffer_size - 1] << 8) | (buffer[buffer_size - 2]);
   std::memcpy(&crc,&(buffer[buffer_size - 2]), sizeof(uint16_t));
   if (!crc16.checkCRC(buffer, buffer_size - sizeof(uint16_t), crc)) {
-    std::cerr << "Invalid CRC!" << std::endl;
+    Logger(LogType::INFO)("Invalid CRC!");
     return nullptr;
   }
 

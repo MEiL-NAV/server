@@ -8,6 +8,7 @@ NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
     :   PeriodicEvent(config.loop_rate_ms, false),
         udp_listener{config.sensor_multicast_address, config.sensor_multicast_port, config.sensor_multicast_interface},
         time_synchronizer(config.time_sync_period_ms, config.time_sync_address, config.time_sync_port, config.sensor_multicast_interface),
+        ekf_logger("ekf", "time,x,y,z,vx,vy,vz,q0,qx,qy,qz,gyro_bias_X,gyro_bias_Y,gyro_bias_Z"),
         accelerometer(time_synchronizer,!config.accelerometer_calibration),
         gyroscope(time_synchronizer,false),
         position_provider(time_synchronizer),
@@ -46,6 +47,8 @@ void NaviSystem::periodic_event()
         {
             ekf.update(time, Converters::mdeg_to_radians(gyroscope_reading.second), accelerometer_reading.second);
         }
+        ekf_logger(time, ekf.get_state());
+
         if(counter++ % 5 == 0)
         {
             send_status();
