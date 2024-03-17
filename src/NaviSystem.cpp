@@ -18,7 +18,7 @@ NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
 {
     status_sock = zmq::socket_t(ctx, zmq::socket_type::pub);
     status_sock.bind(status_address);
-
+    set_EKF_parameters();
     udp_listener.set_message_event(std::bind(&NaviSystem::messageHandler, this, std::placeholders::_1));
     start_periodic_task();
 }
