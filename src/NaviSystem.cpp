@@ -13,7 +13,8 @@ NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
         gyroscope(time_synchronizer,false),
         position_provider(time_synchronizer),
         fanuc_position(time_synchronizer),
-        ctx{ctx}
+        ctx{ctx},
+        debug_mode{config.debug_mode}
 
 {
     status_sock = zmq::socket_t(ctx, zmq::socket_type::pub);
@@ -32,6 +33,21 @@ NaviSystem::~NaviSystem()
 void NaviSystem::periodic_event() 
 {
     static uint8_t counter = 1;
+    if(debug_mode)
+    {
+        auto time = Millis::get();
+        std::optional<Eigen::Vector3f> position = std::nullopt;
+        if(position_provider.has_new_value())
+        {
+            position = position_provider.get_value(true).second;
+        }
+        ekf.update(time, Eigen::Vector3f::Zero(),
+            Eigen::Vector3f{0.0f, 0.0f, 9.805f},
+            position);
+        ekf_logger(time, ekf.get_state());
+        send_status();
+        return;
+    }
     if(accelerometer.has_new_value() && gyroscope.has_new_value())
     {
         auto accelerometer_reading = accelerometer.get_value(true);
@@ -49,7 +65,6 @@ void NaviSystem::periodic_event()
             ekf.update(time, Converters::mdeg_to_radians(gyroscope_reading.second), accelerometer_reading.second);
         }
         ekf_logger(time, ekf.get_state());
-
         if(counter++ % 5 == 0)
         {
             send_status();
@@ -124,4 +139,5 @@ void NaviSystem::set_EKF_parameters()
     ekf.set_accel_measurement_noise(config.accel_measurement_noise);
     ekf.set_pos_provider_measurement_noise(config.pos_provider_measurement_noise);
     ekf.set_constraint_correction_scaler(config.constraint_correction_scaler);
+    ekf.set_constraint_correction_repeats(config.constraint_correction_repeats);
 }

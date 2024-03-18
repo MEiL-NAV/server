@@ -158,3 +158,9 @@ void EKF_IMU::set_constraint_correction_scaler(
 {
     this->constraint_correction_scaler = constraint_correction_scaler;
 }
+
+void EKF_IMU::set_constraint_correction_repeats(
+    int constraint_correction_repeats) 
+{
+    this->constraint_correction_repeats = constraint_correction_repeats;
+}

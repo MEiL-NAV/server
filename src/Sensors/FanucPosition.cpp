@@ -189,5 +189,6 @@ void FanucPosition::parse_message(std::string message)
     std::scoped_lock lock(value_mutex);
     raw_value = position;
     value = position;
+    sem = true;
     log();
 }

@@ -35,6 +35,7 @@ public:
     void set_pos_provider_measurement_noise(float pos_provider_measurement_noise);
 
     void set_constraint_correction_scaler(float constraint_correction_scaler);
+    void set_constraint_correction_repeats(int constraint_correction_repeats);
 
 protected:
     uint32_t last_update;

@@ -35,8 +35,10 @@ Config::Config(const char *config_file_path)
         accel_measurement_noise = config["accel_measurement_noise"].as<float>();
         pos_provider_measurement_noise = config["pos_provider_measurement_noise"].as<float>();
         constraint_correction_scaler = config["constraint_correction_scaler"].as<float>();
+        constraint_correction_repeats = config["constraint_correction_repeats"].as<int>();
 
         loop_rate_ms = config["loop_rate_ms"].as<uint32_t>();
+        debug_mode = config["debug_mode"].as<bool>();
     }
     catch(const std::exception& e)
     {
@@ -88,10 +90,12 @@ void Config::save()
         out << YAML::Key << "accel_measurement_noise" << YAML::Value << accel_measurement_noise;
         out << YAML::Key << "pos_provider_measurement_noise" << YAML::Value << pos_provider_measurement_noise;
         out << YAML::Key << "constraint_correction_scaler" << YAML::Value << constraint_correction_scaler;
+        out << YAML::Key << "constraint_correction_repeats" << YAML::Value << constraint_correction_repeats;
         
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Other:");
         out << YAML::Key << "loop_rate_ms" << YAML::Value << loop_rate_ms;
+        out << YAML::Key << "debug_mode" << YAML::Value << debug_mode;
         out << YAML::EndMap;
         std::ofstream fout(config_file_path, std::ios::out | std::ios::trunc);
         fout << out.c_str();
@@ -150,9 +154,11 @@ void Config::restore_defaults()
     accel_measurement_noise = 0.01;
     pos_provider_measurement_noise = 0.01;
     constraint_correction_scaler = 0.01;
+    constraint_correction_repeats = 3;
 
     // Other:
     loop_rate_ms = 5;
+    debug_mode = false;
 
     save();
 }

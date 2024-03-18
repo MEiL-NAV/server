@@ -35,8 +35,10 @@ public:
     float accel_measurement_noise;
     float pos_provider_measurement_noise;
     float constraint_correction_scaler;
+    int constraint_correction_repeats;
 
     uint32_t loop_rate_ms;
+    bool debug_mode;
 
     static const Config& get_singleton();
 

@@ -37,6 +37,8 @@ private:
     zmq::socket_t status_sock;
     static constexpr const char* status_address = "tcp://*:5555";
 
+    bool debug_mode;
+
     void messageHandler(const Message& msg);
     void send_status();
     void set_EKF_parameters();
