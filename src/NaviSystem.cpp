@@ -8,7 +8,8 @@ NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
     :   PeriodicEvent(config.loop_rate_ms, false),
         udp_listener{config.sensor_multicast_address, config.sensor_multicast_port, config.sensor_multicast_interface},
         time_synchronizer(config.time_sync_period_ms, config.time_sync_address, config.time_sync_port, config.sensor_multicast_interface),
-        ekf_logger("ekf", "time,x,y,z,vx,vy,vz,q0,qx,qy,qz,gyro_bias_X,gyro_bias_Y,gyro_bias_Z"),
+        ekf(config.drawbar_length),
+        ekf_logger("ekf", "time,x,y,z,vx,vy,vz,q0,qx,qy,qz,gyro_bias_X,gyro_bias_Y,gyro_bias_Z,az,el"),
         accelerometer(time_synchronizer,!config.accelerometer_calibration),
         gyroscope(time_synchronizer,false),
         position_provider(time_synchronizer),
@@ -136,6 +137,7 @@ void NaviSystem::set_EKF_parameters()
     ekf.set_velocity_process_noise(config.velocity_process_noise);
     ekf.set_quaterion_process_noise(config.quaterion_process_noise);
     ekf.set_gyro_bias_process_noise(config.gyro_bias_process_noise);
+    ekf.set_drawbar_process_noise(config.drawbar_process_noise);
     ekf.set_accel_measurement_noise(config.accel_measurement_noise);
     ekf.set_pos_provider_measurement_noise(config.pos_provider_measurement_noise);
     ekf.set_constraint_correction_scaler(config.constraint_correction_scaler);
