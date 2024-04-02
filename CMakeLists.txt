@@ -34,6 +34,7 @@ find_package(yaml-cpp)
 target_link_libraries(server yaml-cpp)
 find_package(Boost 1.71.0 REQUIRED COMPONENTS system)
 target_link_libraries(server Boost::system)
+target_link_libraries(server "/usr/lib/x86_64-linux-gnu/libmodbus.so")
 
 add_custom_command(TARGET server POST_BUILD 
                COMMAND ${CMAKE_COMMAND} -E copy_if_different

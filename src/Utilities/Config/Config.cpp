@@ -37,6 +37,15 @@ Config::Config(const char *config_file_path)
         constraint_correction_scaler = config["constraint_correction_scaler"].as<float>();
 
         loop_rate_ms = config["loop_rate_ms"].as<uint32_t>();
+
+        if(!config["force_sensor_ips"])
+        {
+            force_sensor_ips = {};
+        }
+        else
+        {
+            force_sensor_ips = config["force_sensor_ips"].as<std::vector<std::string>>();
+        }
     }
     catch(const std::exception& e)
     {
@@ -88,6 +97,11 @@ Config::~Config()
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Other:");
         out << YAML::Key << "loop_rate_ms" << YAML::Value << loop_rate_ms;
+
+        out << YAML::Newline << YAML::Newline;
+        out << YAML::Comment("Plugins:");
+        out << YAML::Key << "force_sensor_ips" << YAML::Value << force_sensor_ips;
+
         out << YAML::EndMap;
         fout << out.c_str();
     }
@@ -146,4 +160,7 @@ void Config::restore_defaults()
 
     // Other:
     loop_rate_ms = 5;
+
+    // Plugins:
+    force_sensor_ips.clear();
 }

@@ -75,6 +75,8 @@ const char *Logger::get_prefix()
         return "[SYNC] ";
     case LogType::FANUC:
         return "[FANUC] ";
+    case LogType::MODBUS:
+        return "[MODBUS] ";
     default:
         return "";
     }

@@ -9,7 +9,7 @@
 #include <zmq.hpp>
 #include "EKF/EKF_IMU.h"
 #include "Utilities/Config/Config.h"
-#include "ForceLogger.h"
+#include "Plugins/Force/ForceLogger.h"
 
 class NaviSystem : public PeriodicEvent
 {

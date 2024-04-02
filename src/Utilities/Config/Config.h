@@ -37,6 +37,8 @@ public:
 
     uint32_t loop_rate_ms;
 
+    std::vector<std::string> force_sensor_ips;
+
     static const Config& get_singleton();
 
     static Config& get_singleton_mut();
