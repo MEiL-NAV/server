@@ -105,3 +105,8 @@ Eigen::Matrix<float,3,4> D(Eigen::Vector4f& quaterion, Eigen::Vector3f& acc)
     
     return 2.0f*D;
 }
+
+float wrap_to_pi(float angle) 
+{
+    return angle - 2*M_PI*floor((angle + M_PI)/(2*M_PI));
+}

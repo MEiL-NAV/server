@@ -10,6 +10,7 @@
 #include "EKF/EKF_IMU.h"
 #include "Utilities/Config/Config.h"
 #include "Plugins/Force/ForceLogger.h"
+#include "Utilities/Loggers/LoggerCSV.h"
 
 class NaviSystem : public PeriodicEvent
 {
@@ -24,6 +25,7 @@ private:
     UDPListener udp_listener;
     TimeSynchronizer time_synchronizer;
     EKF_IMU ekf;
+    LoggerCSV ekf_logger;
 
     // Sensors
     Accelerometer accelerometer;
@@ -36,6 +38,8 @@ private:
     zmq::context_t& ctx;
     zmq::socket_t status_sock;
     static constexpr const char* status_address = "tcp://*:5555";
+
+    bool debug_mode;
 
     void messageHandler(const Message& msg);
     void send_status();

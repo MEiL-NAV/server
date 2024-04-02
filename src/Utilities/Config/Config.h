@@ -9,6 +9,7 @@ class Config
 public:
     Config(const char* config_file_path);
     ~Config();
+    void save();
 
     int log_mask;
     std::string log_path;
@@ -31,11 +32,15 @@ public:
     float velocity_process_noise;
     float quaterion_process_noise;
     float gyro_bias_process_noise;
+    float drawbar_process_noise;
     float accel_measurement_noise;
     float pos_provider_measurement_noise;
     float constraint_correction_scaler;
+    int constraint_correction_repeats;
+    float drawbar_length;
 
     uint32_t loop_rate_ms;
+    bool debug_mode;
 
     std::vector<std::string> force_sensor_ips;
 

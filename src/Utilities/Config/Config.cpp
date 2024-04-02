@@ -6,7 +6,7 @@
 
 std::unique_ptr<Config> Config::singleton = nullptr;
 
-Config::Config(const char *config_file_path) 
+Config::Config(const char *config_file_path)
 {
     try
     {
@@ -32,11 +32,15 @@ Config::Config(const char *config_file_path)
         velocity_process_noise = config["velocity_process_noise"].as<float>();
         quaterion_process_noise = config["quaterion_process_noise"].as<float>();
         gyro_bias_process_noise = config["gyro_bias_process_noise"].as<float>();
+        drawbar_process_noise = config["drawbar_process_noise"].as<float>();
         accel_measurement_noise = config["accel_measurement_noise"].as<float>();
         pos_provider_measurement_noise = config["pos_provider_measurement_noise"].as<float>();
         constraint_correction_scaler = config["constraint_correction_scaler"].as<float>();
+        constraint_correction_repeats = config["constraint_correction_repeats"].as<int>();
+        drawbar_length = config["drawbar_length"].as<float>();
 
         loop_rate_ms = config["loop_rate_ms"].as<uint32_t>();
+        debug_mode = config["debug_mode"].as<bool>();
 
         if(!config["force_sensor_ips"])
         {
@@ -45,7 +49,7 @@ Config::Config(const char *config_file_path)
         else
         {
             force_sensor_ips = config["force_sensor_ips"].as<std::vector<std::string>>();
-        }
+        };
     }
     catch(const std::exception& e)
     {
@@ -56,9 +60,13 @@ Config::Config(const char *config_file_path)
 
 Config::~Config() 
 {
+    
+}
+
+void Config::save() 
+{
     try
     {
-        std::ofstream fout(config_file_path, std::ios::out | std::ios::trunc);
         YAML::Emitter out;
         out << YAML::BeginMap;
 
@@ -90,20 +98,27 @@ Config::~Config()
         out << YAML::Key << "velocity_process_noise" << YAML::Value << velocity_process_noise;
         out << YAML::Key << "quaterion_process_noise" << YAML::Value << quaterion_process_noise;
         out << YAML::Key << "gyro_bias_process_noise" << YAML::Value << gyro_bias_process_noise;
+        out << YAML::Key << "drawbar_process_noise" << YAML::Value << drawbar_process_noise;
         out << YAML::Key << "accel_measurement_noise" << YAML::Value << accel_measurement_noise;
         out << YAML::Key << "pos_provider_measurement_noise" << YAML::Value << pos_provider_measurement_noise;
         out << YAML::Key << "constraint_correction_scaler" << YAML::Value << constraint_correction_scaler;
+        out << YAML::Key << "constraint_correction_repeats" << YAML::Value << constraint_correction_repeats;
+        out << YAML::Key << "drawbar_length" << YAML::Value << drawbar_length;
         
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Other:");
         out << YAML::Key << "loop_rate_ms" << YAML::Value << loop_rate_ms;
+        out << YAML::Key << "debug_mode" << YAML::Value << debug_mode;
 
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Plugins:");
         out << YAML::Key << "force_sensor_ips" << YAML::Value << force_sensor_ips;
 
         out << YAML::EndMap;
+        std::ofstream fout(config_file_path, std::ios::out | std::ios::trunc);
         fout << out.c_str();
+        fout.close();
+        Logger(LogType::INFO)("Config saved!");
     }
     catch(const std::exception& e)
     {
@@ -150,17 +165,23 @@ void Config::restore_defaults()
     accelerometer_bias = Eigen::Vector3f::Zero();
 
     // EKF parameters:
-    position_process_noise = 0.01;
-    velocity_process_noise = 0.01;
-    quaterion_process_noise = 0.01;
-    gyro_bias_process_noise = 0.01;
-    accel_measurement_noise = 0.01;
-    pos_provider_measurement_noise = 0.01;
-    constraint_correction_scaler = 0.01;
+    position_process_noise = 0.01f;
+    velocity_process_noise = 0.01f;
+    quaterion_process_noise = 0.01f;
+    gyro_bias_process_noise = 0.01f;
+    drawbar_process_noise = 0.01f;
+    accel_measurement_noise = 0.01f;
+    pos_provider_measurement_noise = 0.01f;
+    constraint_correction_scaler = 0.01f;
+    constraint_correction_repeats = 3;
+    drawbar_length = 0.0f;
 
     // Other:
     loop_rate_ms = 5;
+    debug_mode = false;
 
     // Plugins:
     force_sensor_ips.clear();
+
+    save();
 }

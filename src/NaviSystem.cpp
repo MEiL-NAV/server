@@ -8,28 +8,47 @@ NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
     :   PeriodicEvent(config.loop_rate_ms, false),
         udp_listener{config.sensor_multicast_address, config.sensor_multicast_port, config.sensor_multicast_interface},
         time_synchronizer(config.time_sync_period_ms, config.time_sync_address, config.time_sync_port, config.sensor_multicast_interface),
+        ekf(config.drawbar_length),
+        ekf_logger("ekf", "time,x,y,z,vx,vy,vz,q0,qx,qy,qz,gyro_bias_X,gyro_bias_Y,gyro_bias_Z,az,el"),
         accelerometer(time_synchronizer,!config.accelerometer_calibration),
         gyroscope(time_synchronizer,false),
         position_provider(time_synchronizer),
         fanuc_position(time_synchronizer),
-        ctx{ctx}
+        ctx{ctx},
+        debug_mode{config.debug_mode}
 
 {
     status_sock = zmq::socket_t(ctx, zmq::socket_type::pub);
     status_sock.bind(status_address);
-
+    set_EKF_parameters();
     udp_listener.set_message_event(std::bind(&NaviSystem::messageHandler, this, std::placeholders::_1));
     start_periodic_task();
 }
 
 NaviSystem::~NaviSystem() 
 {
+    udp_listener.stop_listening_thread();
     status_sock.close();
 }
 
 void NaviSystem::periodic_event() 
 {
     static uint8_t counter = 1;
+    if(debug_mode)
+    {
+        auto time = Millis::get();
+        std::optional<Eigen::Vector3f> position = std::nullopt;
+        if(position_provider.has_new_value())
+        {
+            position = position_provider.get_value(true).second;
+        }
+        ekf.update(time, Eigen::Vector3f::Zero(),
+            Eigen::Vector3f{0.0f, 0.0f, 9.805f},
+            position);
+        ekf_logger(time, ekf.get_state());
+        send_status();
+        return;
+    }
     if(accelerometer.has_new_value() && gyroscope.has_new_value())
     {
         auto accelerometer_reading = accelerometer.get_value(true);
@@ -46,6 +65,7 @@ void NaviSystem::periodic_event()
         {
             ekf.update(time, Converters::mdeg_to_radians(gyroscope_reading.second), accelerometer_reading.second);
         }
+        ekf_logger(time, ekf.get_state());
         if(counter++ % 5 == 0)
         {
             send_status();
@@ -126,7 +146,9 @@ void NaviSystem::set_EKF_parameters()
     ekf.set_velocity_process_noise(config.velocity_process_noise);
     ekf.set_quaterion_process_noise(config.quaterion_process_noise);
     ekf.set_gyro_bias_process_noise(config.gyro_bias_process_noise);
+    ekf.set_drawbar_process_noise(config.drawbar_process_noise);
     ekf.set_accel_measurement_noise(config.accel_measurement_noise);
     ekf.set_pos_provider_measurement_noise(config.pos_provider_measurement_noise);
     ekf.set_constraint_correction_scaler(config.constraint_correction_scaler);
+    ekf.set_constraint_correction_repeats(config.constraint_correction_repeats);
 }

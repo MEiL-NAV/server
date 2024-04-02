@@ -6,16 +6,38 @@ logger_address: tcp://*:6666
 
 # Time sync:
 time_sync_period_ms: 5000
+time_sync_address: 224.0.0.100
 time_sync_port: 50000
 
 # Sensors config:
+sensor_multicast_address: 224.0.0.100
+sensor_multicast_port: 1234
+sensor_multicast_interface: ""
 accelerometer_calibration: true
-accelerometer_bias_x: 0
-accelerometer_bias_y: 0
-accelerometer_bias_z: 0
-accelerometer_scalers_x: 1
-accelerometer_scalers_y: 1
-accelerometer_scalers_z: 1
+accelerometer_R:
+  - 1
+  - 0
+  - 0
+  - 0
+  - 1
+  - 0
+  - 0
+  - 0
+  - 1
+accelerometer_bias:
+  - 0
+  - 0
+  - 0
+
+# EKF parameters:
+position_process_noise: 0.01
+velocity_process_noise: 0.01
+quaterion_process_noise: 0.01
+gyro_bias_process_noise: 0.01
+drawbar_process_noise: 0.01
+accel_measurement_noise: 0.01
+pos_provider_measurement_noise: 0.01
+constraint_correction_scaler: 0.01
 
 # Other:
 loop_rate_ms: 5
