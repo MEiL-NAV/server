@@ -128,6 +128,15 @@ void NaviSystem::send_status()
     ss.str("");
     status_sock.send(message,zmq::send_flags::none);
 
+    auto forces = force_logger.get_forces();
+    if (forces.size() > 1)
+    {
+        ss << "f:" << forces.format(commaFormat);
+        s = ss.str();
+        message.rebuild(s.data(), s.size());
+        ss.str("");
+        status_sock.send(message,zmq::send_flags::none);
+    }
 }
 
 void NaviSystem::set_EKF_parameters() 

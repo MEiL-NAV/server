@@ -41,6 +41,15 @@ Config::Config(const char *config_file_path)
 
         loop_rate_ms = config["loop_rate_ms"].as<uint32_t>();
         debug_mode = config["debug_mode"].as<bool>();
+
+        if(!config["force_sensor_ips"])
+        {
+            force_sensor_ips = {};
+        }
+        else
+        {
+            force_sensor_ips = config["force_sensor_ips"].as<std::vector<std::string>>();
+        };
     }
     catch(const std::exception& e)
     {
@@ -100,6 +109,11 @@ void Config::save()
         out << YAML::Comment("Other:");
         out << YAML::Key << "loop_rate_ms" << YAML::Value << loop_rate_ms;
         out << YAML::Key << "debug_mode" << YAML::Value << debug_mode;
+
+        out << YAML::Newline << YAML::Newline;
+        out << YAML::Comment("Plugins:");
+        out << YAML::Key << "force_sensor_ips" << YAML::Value << force_sensor_ips;
+
         out << YAML::EndMap;
         std::ofstream fout(config_file_path, std::ios::out | std::ios::trunc);
         fout << out.c_str();
@@ -165,6 +179,9 @@ void Config::restore_defaults()
     // Other:
     loop_rate_ms = 5;
     debug_mode = false;
+
+    // Plugins:
+    force_sensor_ips.clear();
 
     save();
 }

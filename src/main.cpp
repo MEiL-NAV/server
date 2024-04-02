@@ -6,6 +6,7 @@
 #include "Utilities/Millis.h"
 #include "Utilities/Loggers/Logger.h"
 #include "Utilities/Config/Config.h"
+#include "Utilities/Modbus/ModbusClient.h"
 
 namespace
 {
