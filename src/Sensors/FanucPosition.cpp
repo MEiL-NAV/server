@@ -3,9 +3,9 @@
 #include <chrono>
 #include <semaphore>
 
-FanucPosition::FanucPosition(TimeSynchronizer & time_synchronizer)
+FanucPosition::FanucPosition(TimeSynchronizer & time_synchronizer, std::string ip_address, uint16_t port)
     :   Sensor(time_synchronizer, "fanuc_position", "time,X,Y,Z,raw_X,raw_Y,raw_Z"),
-        PeriodicEvent(1000,false),
+        PeriodicEvent(200,false),
         socket(io_service)  ,
         logger(LogType::FANUC)
 {
@@ -50,13 +50,48 @@ void FanucPosition::periodic_event()
         return;
     }
 
+    logger("Requesting current position");
+    if(!send_async("curpos"))
+    {
+        return;
+    }
+
+    logger("Waiting for reply");
+    auto reply = recv_async();
+    if (reply.has_value())
+    {
+        parse_message(reply.value());
+    }
+}
+
+void FanucPosition::close() 
+{
+    PeriodicEvent::stop_periodic_task();
+    if (socket.is_open())
+    {
+        logger("Closing connection to fanucpy");
+        socket.close();
+    }
+}
+
+bool FanucPosition::send_async(std::string msg)
+{
+    if (msg.empty())
+    {
+        return false;
+    }
+
+    if (msg.back() != '\n')
+    {
+        msg.push_back('\n');
+    }
+    
     auto send_future = std::async(std::launch::async, [&] () -> bool
         {
             try
             {
-                //send message "curpos"
-                std::string message = "curpos";
-                boost::asio::write(socket, boost::asio::buffer(message));
+                //send message
+                boost::asio::write(socket, boost::asio::buffer(msg));
             }
             catch(const boost::system::system_error& e)
             {
@@ -73,7 +108,7 @@ void FanucPosition::periodic_event()
         case std::future_status::deferred:
         case std::future_status::timeout:
             close();
-            return;
+            return false;
         case std::future_status::ready:
             break;
     }
@@ -81,23 +116,10 @@ void FanucPosition::periodic_event()
     if(!send_future.get())
     {
         close();
-        return;
+        return false;
     }
 
-    auto reply = recv_async();
-    if (reply.has_value())
-    {
-        parse_message(reply.value());
-    }
-}
-
-void FanucPosition::close() 
-{
-    PeriodicEvent::stop_periodic_task();
-    if (socket.is_open())
-    {
-        socket.close();
-    }
+    return true;
 }
 
 std::optional<std::string> FanucPosition::recv_async()
@@ -111,13 +133,17 @@ std::optional<std::string> FanucPosition::recv_async()
                 std::binary_semaphore sem{0};
                 boost::asio::async_read(socket, response,
                     boost::asio::transfer_at_least(1),
-                    [&sem]
-                    ([[maybe_unused]] const boost::system::error_code& ec,
+                    [&]
+                    (const boost::system::error_code& ec,
                      [[maybe_unused]] std::size_t bytes_transferred) 
                     {
+                        if (ec)
+                        {
+                            logger(ec.message()); // Print the human-readable error message
+                        }
                         sem.release();
                     });
-                io_service.run();
+                io_service.run_one();
                 sem.acquire();
                 std::string message = boost::asio::buffer_cast<const char*>(response.data());
                 return message;

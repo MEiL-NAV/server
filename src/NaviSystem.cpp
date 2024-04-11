@@ -13,7 +13,7 @@ NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
         accelerometer(time_synchronizer,!config.accelerometer_calibration),
         gyroscope(time_synchronizer,false),
         position_provider(time_synchronizer),
-        fanuc_position(time_synchronizer),
+        fanuc_position(time_synchronizer, config.fanuc_ip_address, config.fanuc_port),
         ctx{ctx},
         debug_mode{config.debug_mode}
 
@@ -60,6 +60,13 @@ void NaviSystem::periodic_event()
                        Converters::mdeg_to_radians(gyroscope_reading.second),
                        accelerometer_reading.second,
                        fanuc_position.get_value(true).second);
+        }
+        else if(position_provider.has_new_value())
+        {
+            ekf.update(time,
+                       Converters::mdeg_to_radians(gyroscope_reading.second),
+                       accelerometer_reading.second,
+                       position_provider.get_value(true).second);
         }
         else
         {

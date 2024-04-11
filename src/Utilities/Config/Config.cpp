@@ -42,6 +42,9 @@ Config::Config(const char *config_file_path)
         loop_rate_ms = config["loop_rate_ms"].as<uint32_t>();
         debug_mode = config["debug_mode"].as<bool>();
 
+        fanuc_ip_address = config["fanuc_ip_address"].as<std::string>();
+        fanuc_port = config["fanuc_port"].as<uint16_t>();
+
         if(!config["force_sensor_ips"])
         {
             force_sensor_ips = {};
@@ -112,6 +115,8 @@ void Config::save()
 
         out << YAML::Newline << YAML::Newline;
         out << YAML::Comment("Plugins:");
+        out << YAML::Key << "fanuc_ip_address" << YAML::Value << fanuc_ip_address;
+        out << YAML::Key << "fanuc_port" << YAML::Value << fanuc_port;
         out << YAML::Key << "force_sensor_ips" << YAML::Value << force_sensor_ips;
 
         out << YAML::EndMap;
@@ -182,6 +187,8 @@ void Config::restore_defaults()
 
     // Plugins:
     force_sensor_ips.clear();
+    fanuc_ip_address = "127.0.0.1";
+    fanuc_port = 18736;
 
     save();
 }

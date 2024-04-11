@@ -43,6 +43,8 @@ public:
     bool debug_mode;
 
     std::vector<std::string> force_sensor_ips;
+    std::string fanuc_ip_address;
+    uint16_t fanuc_port;
 
     static const Config& get_singleton();
 

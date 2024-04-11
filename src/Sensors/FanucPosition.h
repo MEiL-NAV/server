@@ -10,7 +10,7 @@
 class FanucPosition : public Sensor<Eigen::Vector3f>, protected PeriodicEvent
 {
 public:
-    FanucPosition(TimeSynchronizer& time_synchronizer);
+    FanucPosition(TimeSynchronizer& time_synchronizer, std::string ip_address, uint16_t port = 18736);
     virtual ~FanucPosition();
 
     void consumeMessage([[maybe_unused]] const Message& msg) override {};
@@ -21,6 +21,7 @@ protected:
     void periodic_event() override;
     void close();
 
+    bool send_async(std::string msg);
     std::optional<std::string> recv_async();
     void parse_message(std::string message);
 
