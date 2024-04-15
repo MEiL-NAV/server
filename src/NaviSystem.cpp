@@ -38,7 +38,11 @@ void NaviSystem::periodic_event()
     {
         auto time = Millis::get();
         std::optional<Eigen::Vector3f> position = std::nullopt;
-        if(position_provider.has_new_value())
+        if(fanuc_position.has_new_value())
+        {
+            position = fanuc_position.get_value(true).second;
+        }
+        else if(position_provider.has_new_value())
         {
             position = position_provider.get_value(true).second;
         }
