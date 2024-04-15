@@ -111,11 +111,11 @@ private:
 template <>
 inline Eigen::Vector3f Statistics<Eigen::Vector3f>::sq(Eigen::Vector3f val)
 {
-    return val.cwisePow(2.0f);
+    return val.array().square();
 }
 
 template <>
 inline Eigen::Vector3f Statistics<Eigen::Vector3f>::sqrt(Eigen::Vector3f val)
 {
-    return val.cwiseSqrt();
+    return val.array().sqrt();
 }
