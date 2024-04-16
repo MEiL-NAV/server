@@ -1,0 +1,8 @@
+services:
+  server:
+    container_name: server
+    image: xevi8x/meil_nav_server:latest
+    network_mode: "host"
+    volumes:
+      - ./config.yaml:/code/build/config.yaml
+      - ./logs:/code/logs
