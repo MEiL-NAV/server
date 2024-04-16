@@ -4,12 +4,12 @@
 #include <semaphore>
 
 FanucPosition::FanucPosition(TimeSynchronizer & time_synchronizer, std::string ip_address, uint16_t port)
-    :   Sensor(time_synchronizer, "fanuc_position", "time,X,Y,Z,raw_X,raw_Y,raw_Z"),
+    :   Sensor(time_synchronizer, "fanuc_position", "time,X,Y,Z,W,P,R"),
         PeriodicEvent(200,false),
         socket(io_service)  ,
-        logger(LogType::FANUC)
+        msg_logger(LogType::FANUC)
 {
-    connect("127.0.0.1", 18736);
+    connect(ip_address, port);
 }
 
 FanucPosition::~FanucPosition() 
@@ -31,13 +31,22 @@ void FanucPosition::connect(std::string ip_address, uint16_t port)
             throw std::runtime_error("No reply on connect");
         }
         PeriodicEvent::start_periodic_task();
-        logger("Connected to fanucpy");
+        msg_logger("Connected to fanucpy");
     }
     catch(const boost::system::system_error& e)
     {
         close();
-        logger(e.what());
+        msg_logger(e.what());
     }   
+}
+
+void FanucPosition::log() 
+{
+    Eigen::VectorXf log(7);
+    log(0) = last_update;
+    log.segment<3>(1) =  value;
+    log.segment<3>(4) =  orientation; 
+    logger << log;
 }
 
 void FanucPosition::periodic_event()
@@ -46,17 +55,17 @@ void FanucPosition::periodic_event()
     std::scoped_lock lock(socket_mtx);
     if(!socket.is_open())
     {
-        logger("Socket is not open");
+        msg_logger("Socket is not open");
         return;
     }
 
-    logger("Requesting current position");
+    msg_logger("Requesting current position");
     if(!send_async("curpos"))
     {
         return;
     }
 
-    logger("Waiting for reply");
+    msg_logger("Waiting for reply");
     auto reply = recv_async();
     if (reply.has_value())
     {
@@ -69,7 +78,7 @@ void FanucPosition::close()
     PeriodicEvent::stop_periodic_task();
     if (socket.is_open())
     {
-        logger("Closing connection to fanucpy");
+        msg_logger("Closing connection to fanucpy");
         socket.close();
     }
 }
@@ -95,7 +104,7 @@ bool FanucPosition::send_async(std::string msg)
             }
             catch(const boost::system::system_error& e)
             {
-                logger(e.what());
+                msg_logger(e.what());
                 close();
                 return false;
             }
@@ -139,7 +148,7 @@ std::optional<std::string> FanucPosition::recv_async()
                     {
                         if (ec)
                         {
-                            logger(ec.message()); // Print the human-readable error message
+                            msg_logger(ec.message()); // Print the human-readable error message
                         }
                         sem.release();
                     });
@@ -152,11 +161,11 @@ std::optional<std::string> FanucPosition::recv_async()
             {
                 if(e.code() == boost::asio::error::eof)
                 {
-                    logger("Connection closed by fanucpy");
+                    msg_logger("Connection closed by fanucpy");
                     close();
                     return "";
                 }
-                logger(e.what());
+                msg_logger(e.what());
                 return "";
             }
         }
@@ -166,7 +175,7 @@ std::optional<std::string> FanucPosition::recv_async()
     {
         case std::future_status::deferred:
         case std::future_status::timeout:
-            logger("Timeout");
+            msg_logger("Timeout");
             socket.cancel();
             break;
         case std::future_status::ready:
@@ -196,25 +205,27 @@ void FanucPosition::parse_message(std::string message)
     }
     if (result.size() != 6)
     {
-        logger("Invalid message: " + message);
+        msg_logger("Invalid message: " + message);
         return;
     }
-    char prefix[] = {'x', 'y', 'z'};
-    Eigen::Vector3f position;
+    char prefix[] = {'x', 'y', 'z', 'w', 'p', 'r'};
+    Eigen::Vector<float, 6> values;
 
-    for (size_t i = 0; i < 3; i++)
+    for (size_t i = 0; i < 6; i++)
     {
         if(result[i].empty() || result[i][0] != prefix[i] || result[i][1] != '=')
         {
-            logger("Invalid message: " + message);
+            msg_logger("Invalid message: " + message);
             return;
         }
-        position[i] = std::stof(result[i].substr(2));
+
+        values[i] = std::stof(result[i].substr(2));
     }
     
     std::scoped_lock lock(value_mutex);
-    raw_value = position;
-    value = position;
+    raw_value = values.head<3>();
+    value = values.head<3>();
+    orientation = values.tail<3>();
     sem = true;
     log();
 }

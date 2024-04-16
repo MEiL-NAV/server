@@ -17,6 +17,8 @@ public:
 
     void connect(std::string ip_address, uint16_t port);
 
+    void log() override;
+
 protected:
     void periodic_event() override;
     void close();
@@ -25,9 +27,11 @@ protected:
     std::optional<std::string> recv_async();
     void parse_message(std::string message);
 
+    Eigen::Vector3f orientation;
+
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::socket socket;
     std::mutex socket_mtx;
 
-    Logger logger;
+    Logger msg_logger;
 };
