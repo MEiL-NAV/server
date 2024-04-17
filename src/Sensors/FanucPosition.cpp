@@ -5,8 +5,8 @@
 
 FanucPosition::FanucPosition(TimeSynchronizer & time_synchronizer, std::string ip_address, uint16_t port)
     :   Sensor(time_synchronizer, "fanuc_position", "time,X,Y,Z,W,P,R"),
-        PeriodicEvent(200,false),
-        socket(io_service)  ,
+        PeriodicEvent(500,false),
+        socket(io_service),
         msg_logger(LogType::FANUC)
 {
     connect(ip_address, port);
@@ -223,8 +223,9 @@ void FanucPosition::parse_message(std::string message)
     }
     
     std::scoped_lock lock(value_mutex);
-    raw_value = values.head<3>();
-    value = values.head<3>();
+    last_update = Millis::get();
+    raw_value = values.head<3>()/1000.0f; // to meters.
+    value = values.head<3>()/1000.0f;
     orientation = values.tail<3>();
     sem = true;
     log();
