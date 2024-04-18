@@ -14,7 +14,11 @@ public:
 
     virtual T update(T sample, float delta_time) = 0;
 
+    void reset(T val)
+    {
+        last_value = val;
+    }
 
-private:
+protected:
     T last_value;
 };

@@ -4,6 +4,7 @@
 #include "../Utilities/Loggers/Logger.h"
 #include "../Utilities/Statistics.h"
 #include <cstdint>
+#include "../Utilities/Filters/Filter.h"
 
 struct AccelerometerCalibrationCoefficients
 {
@@ -24,6 +25,8 @@ public:
     bool calibrate(Eigen::Vector3f sample);
 
     AccelerometerCalibrationCoefficients calculate();
+
+    static constexpr float G = 9.805f;
 
 private:
     Eigen::Matrix<float, 3, 6> readings;
@@ -56,7 +59,6 @@ private:
         LEFT            = 32,
     };
 
-    static constexpr float G = 9.805f;
     static constexpr float sd_limit = 0.1f;
 };
 
@@ -76,5 +78,10 @@ private:
 
     AccelerometerCalibration calibration;
 
+    std::unique_ptr<Filter<Eigen::Vector3f>> filter;
+
     void calibrate(Eigen::Vector3f sample);
+
+    static constexpr float LPF_cufoff_freq = 5.0f;
+    static constexpr float LPF_reset_threshold = 5.0f;
 };

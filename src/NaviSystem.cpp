@@ -13,7 +13,7 @@ NaviSystem::NaviSystem(zmq::context_t& ctx, const Config& config)
         accelerometer(time_synchronizer,!config.accelerometer_calibration),
         gyroscope(time_synchronizer,false),
         position_provider(time_synchronizer),
-        fanuc_position(time_synchronizer),
+        fanuc_position(time_synchronizer, config.fanuc_ip_address, config.fanuc_port),
         ctx{ctx},
         debug_mode{config.debug_mode}
 
@@ -33,12 +33,15 @@ NaviSystem::~NaviSystem()
 
 void NaviSystem::periodic_event() 
 {
-    static uint8_t counter = 1;
     if(debug_mode)
     {
         auto time = Millis::get();
         std::optional<Eigen::Vector3f> position = std::nullopt;
-        if(position_provider.has_new_value())
+        if(fanuc_position.has_new_value())
+        {
+            position = fanuc_position.get_value(true).second;
+        }
+        else if(position_provider.has_new_value())
         {
             position = position_provider.get_value(true).second;
         }
@@ -61,15 +64,19 @@ void NaviSystem::periodic_event()
                        accelerometer_reading.second,
                        fanuc_position.get_value(true).second);
         }
+        else if(position_provider.has_new_value())
+        {
+            ekf.update(time,
+                       Converters::mdeg_to_radians(gyroscope_reading.second),
+                       accelerometer_reading.second,
+                       position_provider.get_value(true).second);
+        }
         else
         {
             ekf.update(time, Converters::mdeg_to_radians(gyroscope_reading.second), accelerometer_reading.second);
         }
         ekf_logger(time, ekf.get_state());
-        if(counter++ % 5 == 0)
-        {
-            send_status();
-        }
+        send_status();
     }
 }
 

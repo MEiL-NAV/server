@@ -153,6 +153,7 @@ void EKF_IMU::wrap_angles()
 void EKF_IMU::reset()
 {
     state.setZero();
+    state(0) = 0.22f;
     state(3+3) = 1.0f; // init quaterion as 1,0,0,0
     covariance = process_noise_covariance;
 }

@@ -31,6 +31,8 @@ inline Eigen::Vector<float, state_size> EKFConstraints<state_size, input_size, m
     {
         Eigen::MatrixXf D = constraints_derivative(state_candidate);
         Eigen::VectorXf d = -constraints(state_candidate) + D * state_candidate;
+        // std::cout << state_candidate.transpose() << std::endl;
+        // std::cout << constraints(state_candidate).transpose() << std::endl;
 
         // correction without covariance
         // Eigen::MatrixXf P_inv = (D * (D.transpose())).completeOrthogonalDecomposition().pseudoInverse();

@@ -3,13 +3,13 @@
 #include <chrono>
 #include <semaphore>
 
-FanucPosition::FanucPosition(TimeSynchronizer & time_synchronizer)
-    :   Sensor(time_synchronizer, "fanuc_position", "time,X,Y,Z,raw_X,raw_Y,raw_Z"),
-        PeriodicEvent(1000,false),
-        socket(io_service)  ,
-        logger(LogType::FANUC)
+FanucPosition::FanucPosition(TimeSynchronizer & time_synchronizer, std::string ip_address, uint16_t port)
+    :   Sensor(time_synchronizer, "fanuc_position", "time,X,Y,Z,W,P,R"),
+        PeriodicEvent(500,false),
+        socket(io_service),
+        msg_logger(LogType::FANUC)
 {
-    connect("127.0.0.1", 18736);
+    connect(ip_address, port);
 }
 
 FanucPosition::~FanucPosition() 
@@ -31,13 +31,22 @@ void FanucPosition::connect(std::string ip_address, uint16_t port)
             throw std::runtime_error("No reply on connect");
         }
         PeriodicEvent::start_periodic_task();
-        logger("Connected to fanucpy");
+        msg_logger("Connected to fanucpy");
     }
     catch(const boost::system::system_error& e)
     {
         close();
-        logger(e.what());
+        msg_logger(e.what());
     }   
+}
+
+void FanucPosition::log() 
+{
+    Eigen::VectorXf log(7);
+    log(0) = last_update;
+    log.segment<3>(1) =  value;
+    log.segment<3>(4) =  orientation; 
+    logger << log;
 }
 
 void FanucPosition::periodic_event()
@@ -46,44 +55,17 @@ void FanucPosition::periodic_event()
     std::scoped_lock lock(socket_mtx);
     if(!socket.is_open())
     {
-        logger("Socket is not open");
+        msg_logger("Socket is not open");
         return;
     }
 
-    auto send_future = std::async(std::launch::async, [&] () -> bool
-        {
-            try
-            {
-                //send message "curpos"
-                std::string message = "curpos";
-                boost::asio::write(socket, boost::asio::buffer(message));
-            }
-            catch(const boost::system::system_error& e)
-            {
-                logger(e.what());
-                close();
-                return false;
-            }
-            return true;
-        }
-    );
-    
-    switch (auto status = send_future.wait_for(std::chrono::milliseconds{ 200 }); status)
+    msg_logger("Requesting current position");
+    if(!send_async("curpos"))
     {
-        case std::future_status::deferred:
-        case std::future_status::timeout:
-            close();
-            return;
-        case std::future_status::ready:
-            break;
-    }
-
-    if(!send_future.get())
-    {
-        close();
         return;
     }
 
+    msg_logger("Waiting for reply");
     auto reply = recv_async();
     if (reply.has_value())
     {
@@ -96,8 +78,57 @@ void FanucPosition::close()
     PeriodicEvent::stop_periodic_task();
     if (socket.is_open())
     {
+        msg_logger("Closing connection to fanucpy");
         socket.close();
     }
+}
+
+bool FanucPosition::send_async(std::string msg)
+{
+    if (msg.empty())
+    {
+        return false;
+    }
+
+    if (msg.back() != '\n')
+    {
+        msg.push_back('\n');
+    }
+    
+    auto send_future = std::async(std::launch::async, [&] () -> bool
+        {
+            try
+            {
+                //send message
+                boost::asio::write(socket, boost::asio::buffer(msg));
+            }
+            catch(const boost::system::system_error& e)
+            {
+                msg_logger(e.what());
+                close();
+                return false;
+            }
+            return true;
+        }
+    );
+    
+    switch (auto status = send_future.wait_for(std::chrono::milliseconds{ 200 }); status)
+    {
+        case std::future_status::deferred:
+        case std::future_status::timeout:
+            close();
+            return false;
+        case std::future_status::ready:
+            break;
+    }
+
+    if(!send_future.get())
+    {
+        close();
+        return false;
+    }
+
+    return true;
 }
 
 std::optional<std::string> FanucPosition::recv_async()
@@ -111,13 +142,17 @@ std::optional<std::string> FanucPosition::recv_async()
                 std::binary_semaphore sem{0};
                 boost::asio::async_read(socket, response,
                     boost::asio::transfer_at_least(1),
-                    [&sem]
-                    ([[maybe_unused]] const boost::system::error_code& ec,
+                    [&]
+                    (const boost::system::error_code& ec,
                      [[maybe_unused]] std::size_t bytes_transferred) 
                     {
+                        if (ec)
+                        {
+                            msg_logger(ec.message()); // Print the human-readable error message
+                        }
                         sem.release();
                     });
-                io_service.run();
+                io_service.run_one();
                 sem.acquire();
                 std::string message = boost::asio::buffer_cast<const char*>(response.data());
                 return message;
@@ -126,11 +161,11 @@ std::optional<std::string> FanucPosition::recv_async()
             {
                 if(e.code() == boost::asio::error::eof)
                 {
-                    logger("Connection closed by fanucpy");
+                    msg_logger("Connection closed by fanucpy");
                     close();
                     return "";
                 }
-                logger(e.what());
+                msg_logger(e.what());
                 return "";
             }
         }
@@ -140,7 +175,7 @@ std::optional<std::string> FanucPosition::recv_async()
     {
         case std::future_status::deferred:
         case std::future_status::timeout:
-            logger("Timeout");
+            msg_logger("Timeout");
             socket.cancel();
             break;
         case std::future_status::ready:
@@ -170,25 +205,28 @@ void FanucPosition::parse_message(std::string message)
     }
     if (result.size() != 6)
     {
-        logger("Invalid message: " + message);
+        msg_logger("Invalid message: " + message);
         return;
     }
-    char prefix[] = {'x', 'y', 'z'};
-    Eigen::Vector3f position;
+    char prefix[] = {'x', 'y', 'z', 'w', 'p', 'r'};
+    Eigen::Vector<float, 6> values;
 
-    for (size_t i = 0; i < 3; i++)
+    for (size_t i = 0; i < 6; i++)
     {
         if(result[i].empty() || result[i][0] != prefix[i] || result[i][1] != '=')
         {
-            logger("Invalid message: " + message);
+            msg_logger("Invalid message: " + message);
             return;
         }
-        position[i] = std::stof(result[i].substr(2));
+
+        values[i] = std::stof(result[i].substr(2));
     }
     
     std::scoped_lock lock(value_mutex);
-    raw_value = position;
-    value = position;
+    last_update = Millis::get();
+    raw_value = values.head<3>()/1000.0f; // to meters.
+    value = values.head<3>()/1000.0f;
+    orientation = values.tail<3>();
     sem = true;
     log();
 }

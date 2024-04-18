@@ -55,7 +55,7 @@ public:
         return {last_update, value};
     }
 
-    void log()
+    virtual void log()
     {
         Eigen::VectorXf log(7);
         log(0) = last_update;

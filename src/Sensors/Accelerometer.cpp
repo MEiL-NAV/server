@@ -1,14 +1,18 @@
 #include "Accelerometer.h"
 #include <iostream>
 #include "../Utilities/Config/Config.h"
+#include "../Utilities/Filters/LPF.h"
 
 Accelerometer::Accelerometer(TimeSynchronizer &time_synchronizer, bool skip_calibration)
     :   Sensor(time_synchronizer, "accel", "time,X,Y,Z,raw_X,raw_Y,raw_Z"),
-        initialized{skip_calibration}, was_calibrated{false}
+        initialized{skip_calibration}, was_calibrated{false},
+        filter{std::make_unique<LPF<Eigen::Vector3f>>(LPF_cufoff_freq)}
 {
     auto config = Config::get_singleton();
     coefficients.R = config.accelerometer_R;
     coefficients.b = config.accelerometer_bias;
+    this->raw_value = Eigen::Vector3f{0.0f, 0.0f, AccelerometerCalibration::G};
+    this->value = Eigen::Vector3f{0.0f, 0.0f, AccelerometerCalibration::G};
 }
 
 Accelerometer::~Accelerometer() 
@@ -37,10 +41,19 @@ void Accelerometer::consumeMessage(const Message &msg)
         return;
     }
     std::scoped_lock lock(value_mutex);
-    last_update =  payload.time + offset.value();
+    auto new_last_update = payload.time + offset.value();
+    auto delta_time = static_cast<float>(new_last_update - last_update)/1000.0f;
     raw_value = Eigen::Vector3f(payload.X, payload.Y, payload.Z);
-    value = coefficients.R * raw_value + coefficients.b;
+    Eigen::Vector3f calibrated_val = coefficients.R * raw_value + coefficients.b;
+    value = filter->update(calibrated_val, delta_time);
+    if (value.norm() > LPF_reset_threshold * AccelerometerCalibration::G)
+    {
+        Logger(LogType::INFO)("Reserting filter!");
+        filter->reset(calibrated_val);
+        value = calibrated_val;
+    }
     sem = true;
+    last_update =  new_last_update;
     log();
 }
 
