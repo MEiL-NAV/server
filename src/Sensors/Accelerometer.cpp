@@ -11,6 +11,8 @@ Accelerometer::Accelerometer(TimeSynchronizer &time_synchronizer, bool skip_cali
     auto config = Config::get_singleton();
     coefficients.R = config.accelerometer_R;
     coefficients.b = config.accelerometer_bias;
+    this->raw_value = Eigen::Vector3f{0.0f, 0.0f, AccelerometerCalibration::G};
+    this->value = Eigen::Vector3f{0.0f, 0.0f, AccelerometerCalibration::G};
 }
 
 Accelerometer::~Accelerometer() 

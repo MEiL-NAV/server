@@ -33,7 +33,6 @@ NaviSystem::~NaviSystem()
 
 void NaviSystem::periodic_event() 
 {
-    static uint8_t counter = 1;
     if(debug_mode)
     {
         auto time = Millis::get();
@@ -77,10 +76,7 @@ void NaviSystem::periodic_event()
             ekf.update(time, Converters::mdeg_to_radians(gyroscope_reading.second), accelerometer_reading.second);
         }
         ekf_logger(time, ekf.get_state());
-        if(counter++ % 5 == 0)
-        {
-            send_status();
-        }
+        send_status();
     }
 }
 

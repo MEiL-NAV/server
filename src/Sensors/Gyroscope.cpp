@@ -10,7 +10,8 @@ Gyroscope::Gyroscope(TimeSynchronizer &time_synchronizer, bool skip_calibration)
         bias{Eigen::Vector3f::Zero()},
         filter{std::make_unique<LPF<Eigen::Vector3f>>(LPF_cufoff_freq)}
 {
-
+    this->raw_value = Eigen::Vector3f::Zero();
+    this->value = Eigen::Vector3f::Zero();
 }
 
 void Gyroscope::consumeMessage(const Message &msg)
